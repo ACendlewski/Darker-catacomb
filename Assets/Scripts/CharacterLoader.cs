@@ -28,10 +28,11 @@ public class CharacterLoader : MonoBehaviour
     }
 
 void DisplayCharacters()
-{
+{Debug.Log($"Found characters:");
     foreach (Character character in characters)
     {
-        Debug.Log($"Name: {character.name}, Health: {character.health}, Attack: {character.attack}, Defense: {character.defense}, Speed: {character.speed}");
+            
+            Debug.Log($"Name: {character.name}");
     }
 }
 
