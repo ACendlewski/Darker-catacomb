@@ -1,39 +1,54 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 public class CharacterSelectionUI : MonoBehaviour
 {
-    public CharacterLoader characterLoader; // Odniesienie do skryptu CharacterLoader
-    public int maxSelection = 4; // Maksymalna liczba postaci do wybrania
-    public Transform characterPanel; // Panel, w którym bêd¹ generowane przyciski postaci
-    public GameObject characterButtonPrefab; // Prefab przycisku dla ka¿dej postaci
-    public Button startBattleButton; // Przycisk "Start Battle"
+    public CharacterLoader characterLoader;
+    public int maxSelection = 4;
+    public Transform characterPanel;
+    public GameObject characterButtonPrefab;
+    public Button startBattleButton;
 
-    public Transform selectedCharacterPanel; // Panel, na którym bêd¹ wyœwietlane wybrane postacie
-    public GameObject selectedCharacterButtonPrefab; // Prefab przycisku dla wybranej postaci
+    public Transform selectedCharacterPanel;
+    public GameObject selectedCharacterButtonPrefab;
 
-void Start()
-{
-    if (characterLoader == null)
+    // Panel stat
+    public GameObject characterStatsPanel;
+    public TextMeshProUGUI characterNameText;
+    public TextMeshProUGUI healthText;
+    public TextMeshProUGUI attackText;
+    public TextMeshProUGUI defenseText;
+    public TextMeshProUGUI speedText;
+
+    void Start()
     {
-        Debug.LogError("CharacterLoader is not assigned!");
-        return; // Zatrzymaj dalsze wykonanie
+        if (characterLoader == null)
+        {
+            Debug.LogError("CharacterLoader is not assigned!");
+            return;
+        }
+
+        StartCoroutine(WaitForCharactersToLoad());
     }
 
-    if (characterLoader.characters == null || characterLoader.characters.Count == 0)
+    IEnumerator WaitForCharactersToLoad()
     {
-        Debug.LogError("No characters loaded in CharacterLoader!");
-        return; // Zatrzymaj dalsze wykonanie
-    }
+        while (characterLoader.characters == null || characterLoader.characters.Count == 0)
+        {
+            yield return null;
+        }
 
-    CreateCharacterButtons();
-    UpdateSelectedCharacterButtons(); // Dodaj to wywo³anie
-    startBattleButton.interactable = false;
-}
+        CreateCharacterButtons();
+        UpdateSelectedCharacterButtons();
+        startBattleButton.interactable = false;
+
+
+        characterStatsPanel.SetActive(false);
+    }
 
     void CreateCharacterButtons()
     {
@@ -49,7 +64,6 @@ void Start()
             return;
         }
 
-        // Dla ka¿dej za³adowanej postaci twórz przycisk
         foreach (Character character in characterLoader.characters)
         {
             GameObject buttonObj = Instantiate(characterButtonPrefab, characterPanel);
@@ -61,7 +75,6 @@ void Start()
                 continue;
             }
 
-            // SprawdŸ, czy prefab zawiera TextMeshProUGUI
             TextMeshProUGUI buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
             if (buttonText == null)
             {
@@ -69,45 +82,38 @@ void Start()
                 continue;
             }
 
-            // Ustaw nazwê postaci na przycisku
             buttonText.text = character.name;
 
-            // Dodaj listener dla przycisku, aby dodaæ postaæ po klikniêciu
+
             button.onClick.AddListener(() => SelectCharacter(character));
+
+
+            EventTrigger trigger = buttonObj.AddComponent<EventTrigger>();
+            EventTrigger.Entry enterEvent = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enterEvent.callback.AddListener((data) => ShowCharacterStats(character));
+            trigger.triggers.Add(enterEvent);
+
+            EventTrigger.Entry exitEvent = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exitEvent.callback.AddListener((data) => HideCharacterStats());
+            trigger.triggers.Add(exitEvent);
         }
     }
 
-
     public void SelectCharacter(Character character)
     {
-        if (CharacterManager.Instance == null)
+        if (CharacterManager.Instance == null || CharacterManager.Instance.selectedCharacters == null)
         {
-            Debug.LogError("CharacterManager.Instance is null!");
+            Debug.LogError("CharacterManager.Instance or selectedCharacters is null!");
             return;
         }
 
-        if (CharacterManager.Instance.selectedCharacters == null)
-        {
-            Debug.LogError("selectedCharacters list is null!");
-            return;
-        }
-
-        if (startBattleButton == null)
-        {
-            Debug.LogError("StartBattleButton is not assigned!");
-            return;
-        }
-
-        // SprawdŸ, czy nie wybrano ju¿ maksymalnej liczby postaci
         if (CharacterManager.Instance.selectedCharacters.Count < maxSelection)
         {
             CharacterManager.Instance.AddCharacter(character);
             Debug.Log(character.name + " has been selected!");
 
-            // Zaktualizuj przyciski wybranych postaci
             UpdateSelectedCharacterButtons();
 
-            // SprawdŸ, czy mo¿na ju¿ rozpocz¹æ walkê
             if (CharacterManager.Instance.selectedCharacters.Count == maxSelection)
             {
                 startBattleButton.interactable = true;
@@ -117,63 +123,55 @@ void Start()
         {
             Debug.Log("You have already selected the maximum number of characters.");
         }
+        DisplaySelectedCharactersInConsole();
     }
-
 
     void UpdateSelectedCharacterButtons()
     {
-        if (selectedCharacterPanel == null)
-        {
-            Debug.LogError("SelectedCharacterPanel is not assigned!");
-            return;
-        }
 
-        if (selectedCharacterButtonPrefab == null)
-        {
-            Debug.LogError("SelectedCharacterButtonPrefab is not assigned!");
-            return;
-        }
-
-        // Usuñ wszystkie istniej¹ce przyciski z panelu
-        foreach (Transform child in selectedCharacterPanel)
-        {
-            Destroy(child.gameObject);
-        }
-
-        // Dla ka¿dej wybranej postaci twórz przycisk
-        foreach (Character character in CharacterManager.Instance.selectedCharacters)
-        {
-            GameObject buttonObj = Instantiate(selectedCharacterButtonPrefab, selectedCharacterPanel);
-            Button button = buttonObj.GetComponent<Button>();
-
-            if (button == null)
-            {
-                Debug.LogError("Button component is missing on the prefab!");
-                continue;
-            }
-
-            // SprawdŸ, czy prefab zawiera TextMeshProUGUI
-            TextMeshProUGUI buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
-            if (buttonText == null)
-            {
-                Debug.LogError("TextMeshProUGUI component is missing on the prefab!");
-                continue;
-            }
-
-            // Ustaw nazwê postaci na przycisku
-            buttonText.text = character.name;
-
-            // Dodaj listener dla przycisku (opcjonalnie: mo¿esz dodaæ akcje przycisków dla wybranych postaci)
-        }
     }
 
 
+    public void ShowCharacterStats(Character character)
+    {
+        characterStatsPanel.SetActive(true);
+        characterNameText.text = "Name: " + character.name;
+        healthText.text = "Health: " + character.health;
+        attackText.text = "Attack: " + character.attack;
+        defenseText.text = "Defense: " + character.defense;
+        speedText.text = "Speed: " + character.speed;
+    }
+
+
+    public void HideCharacterStats()
+    {
+
+    }
+
+    void DisplaySelectedCharactersInConsole()
+    {
+        if (CharacterManager.Instance.selectedCharacters == null || CharacterManager.Instance.selectedCharacters.Count == 0)
+        {
+            Debug.Log("No characters selected.");
+            return;
+        }
+
+        string selectedCharacters = "Selected characters: ";
+        foreach (Character character in CharacterManager.Instance.selectedCharacters)
+        {
+            selectedCharacters += character.name + ", ";
+        }
+
+        selectedCharacters = selectedCharacters.TrimEnd(',', ' ');
+
+        Debug.Log(selectedCharacters);
+    }
+
     public void StartBattle()
     {
-        // SprawdŸ, czy wybrano wymagan¹ liczbê postaci
         if (CharacterManager.Instance.selectedCharacters.Count == maxSelection)
         {
-            SceneManager.LoadScene("BattleScene"); // PrzejdŸ do sceny walki
+            SceneManager.LoadScene("BattleScene");
         }
         else
         {

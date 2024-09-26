@@ -12,11 +12,11 @@ public class CharacterManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Jeœli chcesz, aby obiekt przetrwa³ zmiany sceny
+            DontDestroyOnLoad(gameObject); 
         }
         else
         {
-            Destroy(gameObject); // Zniszcz duplikaty
+            Destroy(gameObject);
         }
     }
 

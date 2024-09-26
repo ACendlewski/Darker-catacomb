@@ -27,14 +27,16 @@ public class CharacterLoader : MonoBehaviour
         }
     }
 
-void DisplayCharacters()
-{Debug.Log($"Found characters:");
-    foreach (Character character in characters)
+    void DisplayCharacters()
     {
-            
+        Debug.Log($"Found characters:");
+        foreach (Character character in characters)
+        {
+
             Debug.Log($"Name: {character.name}");
+        }
+        Debug.Log("END");
     }
-}
 
 
 
