@@ -1,9 +1,9 @@
 using System.Collections;
-using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class CharacterSelectionUI : MonoBehaviour
 {
@@ -46,7 +46,6 @@ public class CharacterSelectionUI : MonoBehaviour
         UpdateSelectedCharacterButtons();
         startBattleButton.interactable = false;
 
-
         characterStatsPanel.SetActive(false);
     }
 
@@ -84,9 +83,7 @@ public class CharacterSelectionUI : MonoBehaviour
 
             buttonText.text = character.name;
 
-
             button.onClick.AddListener(() => SelectCharacter(character));
-
 
             EventTrigger trigger = buttonObj.AddComponent<EventTrigger>();
             EventTrigger.Entry enterEvent = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
@@ -128,9 +125,49 @@ public class CharacterSelectionUI : MonoBehaviour
 
     void UpdateSelectedCharacterButtons()
     {
+        // Usuñ wszystkie stare przyciski
+        foreach (Transform child in selectedCharacterPanel)
+        {
+            Destroy(child.gameObject);
+        }
 
+        // Dodaj nowe przyciski dla wybranych postaci
+        foreach (Character selectedCharacter in CharacterManager.Instance.selectedCharacters)
+        {
+            GameObject buttonObj = Instantiate(selectedCharacterButtonPrefab, selectedCharacterPanel);
+            TextMeshProUGUI buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
+
+            if (buttonText != null)
+            {
+                buttonText.text = selectedCharacter.name;
+            }
+
+            // Dodaj listener usuwaj¹cy postaæ po klikniêciu na przycisk
+            Button button = buttonObj.GetComponent<Button>();
+            if (button != null)
+            {
+                button.onClick.AddListener(() => RemoveCharacter(selectedCharacter));
+            }
+        }
     }
 
+    public void RemoveCharacter(Character character)
+    {
+        if (CharacterManager.Instance != null && CharacterManager.Instance.selectedCharacters.Contains(character))
+        {
+            CharacterManager.Instance.selectedCharacters.Remove(character);
+            Debug.Log(character.name + " has been removed!");
+
+            // Aktualizuj UI
+            UpdateSelectedCharacterButtons();
+
+            // Ustaw przycisk startowy na nieaktywny, jeœli liczba wybranych postaci jest mniejsza ni¿ maxSelection
+            if (CharacterManager.Instance.selectedCharacters.Count < maxSelection)
+            {
+                startBattleButton.interactable = false;
+            }
+        }
+    }
 
     public void ShowCharacterStats(Character character)
     {
@@ -142,10 +179,9 @@ public class CharacterSelectionUI : MonoBehaviour
         speedText.text = "Speed: " + character.speed;
     }
 
-
     public void HideCharacterStats()
     {
-
+        characterStatsPanel.SetActive(false);
     }
 
     void DisplaySelectedCharactersInConsole()

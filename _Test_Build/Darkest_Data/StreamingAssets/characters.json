@@ -1,0 +1,74 @@
+{
+    "characters": [
+        {
+            "name": "Hero",
+            "health": 100,
+            "attack": 20,
+            "defense": 15,
+            "speed": 10
+        },
+        {
+            "name": "Villain",
+            "health": 150,
+            "attack": 25,
+            "defense": 10,
+            "speed": 8
+        },
+        {
+            "name": "Warrior",
+            "health": 120,
+            "attack": 22,
+            "defense": 18,
+            "speed": 12
+        },
+        {
+            "name": "Mage",
+            "health": 80,
+            "attack": 30,
+            "defense": 5,
+            "speed": 14
+        },
+        {
+            "name": "Rogue",
+            "health": 90,
+            "attack": 25,
+            "defense": 10,
+            "speed": 20
+        },
+        {
+            "name": "Paladin",
+            "health": 130,
+            "attack": 18,
+            "defense": 20,
+            "speed": 9
+        },
+        {
+            "name": "Archer",
+            "health": 85,
+            "attack": 24,
+            "defense": 12,
+            "speed": 18
+        },
+        {
+            "name": "Sorcerer",
+            "health": 70,
+            "attack": 35,
+            "defense": 8,
+            "speed": 15
+        },
+        {
+            "name": "Monk",
+            "health": 110,
+            "attack": 20,
+            "defense": 15,
+            "speed": 17
+        },
+        {
+            "name": "Berserker",
+            "health": 140,
+            "attack": 28,
+            "defense": 12,
+            "speed": 10
+        }
+    ]
+}

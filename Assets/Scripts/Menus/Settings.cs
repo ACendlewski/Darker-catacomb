@@ -43,9 +43,11 @@ public class SettingsManager : MonoBehaviour
         // Ukryj tekst ostrzegawczy na starcie
         warningText.gameObject.SetActive(false);
 
-        // Pod³¹cz funkcje do przycisków
+        // Pod³¹cz funkcje do przycisków i zdarzeñ
         applyResolutionButton.onClick.AddListener(ApplyResolution);
         resetButton.onClick.AddListener(ResetToDefaults);
+        volumeSlider.onValueChanged.AddListener(delegate { OnVolumeChanged(); });  // Aktualizacja tekstu przy zmianie g³oœnoœci
+        fullscreenToggle.onValueChanged.AddListener(SetFullscreen);  // Ustaw pe³ny ekran
     }
 
     public void OnVolumeChanged()
@@ -54,12 +56,14 @@ public class SettingsManager : MonoBehaviour
         volumeText.text = "Volume: " + volumeValue.ToString("F2");
     }
 
+    // Funkcja wywo³ywana, gdy u¿ytkownik puœci suwak
     public void OnVolumeSliderReleased()
     {
         float volumeValue = volumeSlider.value;
         Debug.Log("Volume changed to: " + volumeValue);
     }
 
+    // Funkcja wywo³ywana przy zmianie trybu pe³noekranowego
     public void SetFullscreen(bool isFullscreen)
     {
         Screen.fullScreen = isFullscreen;
