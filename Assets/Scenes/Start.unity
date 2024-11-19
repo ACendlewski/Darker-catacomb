@@ -270,7 +270,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   changeSceneButton: {fileID: 2134460346}
-  sceneToLoad: CharacterSelection
+  sceneToLoad: CharSel
 --- !u!1 &296483797
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,28 +1,39 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class TurnManager : MonoBehaviour
 {
-    public List<Character> playerTeam = new List<Character>(); // Grupa bohaterów
-    public List<Character> enemyTeam = new List<Character>();  // Grupa przeciwników
+    public List<Character> playerTeam = new List<Character>(); // Grupa bohaterÃ³w
+    public List<Character> enemyTeam = new List<Character>();  // Grupa przeciwnikÃ³w
 
-    private List<Character> turnOrder = new List<Character>(); // Kolejnoœæ tur
+    private List<Character> turnOrder = new List<Character>(); // KolejnoÅ›Ä‡ tur
     private int currentTurnIndex = 0;
+    private int turnNumber = 1; // Numer tury
+
+    public TextMeshProUGUI turnNumberText; // Referencja do TMP do wyÅ›wietlania numeru tury
 
     void Start()
     {
-        // £¹czenie dru¿yn graczy i przeciwników
+        if (turnNumberText == null)
+        {
+            Debug.LogError("TurnNumberText is not assigned!");
+            return;
+        }
+
+        // ÅÄ…czenie druÅ¼yn graczy i przeciwnikÃ³w
         turnOrder.AddRange(playerTeam);
         turnOrder.AddRange(enemyTeam);
 
-        // Sortowanie kolejnoœci tur wed³ug szybkoœci (malej¹co)
+        // Sortowanie kolejnoÅ›ci tur wedÅ‚ug szybkoÅ›ci (malejÄ…co)
         turnOrder.Sort((a, b) => b.speed.CompareTo(a.speed));
 
-        StartTurn(); // Rozpoczynamy pierwsz¹ turê
+        UpdateTurnNumberText(); // Aktualizuj wyÅ›wietlany numer tury
+        StartTurn(); // Rozpoczynamy pierwszÄ… turÄ™
     }
 
-    // Rozpoczêcie tury
+    // RozpoczÄ™cie tury
     void StartTurn()
     {
         if (turnOrder.Count > 0 && currentTurnIndex < turnOrder.Count)
@@ -32,11 +43,11 @@ public class TurnManager : MonoBehaviour
             if (currentCharacter.IsAlive())
             {
                 Debug.Log("It's " + currentCharacter.name + "'s turn!");
-                PerformAction(currentCharacter); // Tu wywo³ujemy akcjê (atakowanie, leczenie itd.)
+                PerformAction(currentCharacter); // Tu wywoÅ‚ujemy akcjÄ™ (atakowanie, leczenie itd.)
             }
             else
             {
-                EndTurn(); // Jeœli postaæ zginê³a, natychmiast koñczymy turê
+                EndTurn(); // JeÅ›li postaÄ‡ zginÄ™Å‚a, natychmiast koÅ„czymy turÄ™
             }
         }
     }
@@ -44,10 +55,10 @@ public class TurnManager : MonoBehaviour
     // Wykonywanie akcji
     void PerformAction(Character actingCharacter)
     {
-        // Na przyk³adzie prostego ataku, postaæ z dru¿yny gracza atakuje przeciwnika, i vice versa
+        // Na przykÅ‚adzie prostego ataku, postaÄ‡ z druÅ¼yny gracza atakuje przeciwnika, i vice versa
         if (playerTeam.Contains(actingCharacter))
         {
-            // Bohater gracza atakuje przeciwnika (przyjmujemy na razie, ¿e atakuje pierwszego ¿ywego wroga)
+            // Bohater gracza atakuje przeciwnika (przyjmujemy na razie, Å¼e atakuje pierwszego Å¼ywego wroga)
             Character target = GetFirstAliveCharacter(enemyTeam);
             if (target != null)
             {
@@ -56,7 +67,7 @@ public class TurnManager : MonoBehaviour
         }
         else
         {
-            // Wróg atakuje gracza (atak pierwszego ¿ywego bohatera)
+            // WrÃ³g atakuje gracza (atak pierwszego Å¼ywego bohatera)
             Character target = GetFirstAliveCharacter(playerTeam);
             if (target != null)
             {
@@ -64,10 +75,10 @@ public class TurnManager : MonoBehaviour
             }
         }
 
-        EndTurn(); // Po akcji koñczymy turê
+        EndTurn(); // Po akcji koÅ„czymy turÄ™
     }
 
-    // Zakoñczenie tury
+    // ZakoÅ„czenie tury
     public void EndTurn()
     {
         currentTurnIndex++;
@@ -75,12 +86,14 @@ public class TurnManager : MonoBehaviour
         if (currentTurnIndex >= turnOrder.Count)
         {
             currentTurnIndex = 0; // Restart cyklu tur
+            turnNumber++; // ZwiÄ™ksz numer tury po zakoÅ„czeniu cyklu
+            UpdateTurnNumberText(); // Aktualizuj wyÅ›wietlany numer tury
         }
 
-        StartTurn(); // Rozpocznij turê kolejnej postaci
+        StartTurn(); // Rozpocznij turÄ™ kolejnej postaci
     }
 
-    // Funkcja zwracaj¹ca pierwsz¹ ¿yj¹c¹ postaæ z danej dru¿yny
+    // Funkcja zwracajÄ…ca pierwszÄ… Å¼yjÄ…cÄ… postaÄ‡ z danej druÅ¼yny
     Character GetFirstAliveCharacter(List<Character> team)
     {
         foreach (Character member in team)
@@ -90,6 +103,12 @@ public class TurnManager : MonoBehaviour
                 return member;
             }
         }
-        return null; // Jeœli ¿adna postaæ nie ¿yje
+        return null; // JeÅ›li Å¼adna postaÄ‡ nie Å¼yje
+    }
+
+    // Aktualizacja wyÅ›wietlania numeru tury
+    void UpdateTurnNumberText()
+    {
+        turnNumberText.text = "Turn: " + turnNumber;
     }
 }

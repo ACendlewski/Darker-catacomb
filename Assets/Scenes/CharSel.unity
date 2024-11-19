@@ -2131,92 +2131,6 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
---- !u!1 &674093368
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 674093370}
-  - component: {fileID: 674093371}
-  - component: {fileID: 674093373}
-  - component: {fileID: 674093374}
-  m_Layer: 0
-  m_Name: Script Loader
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &674093370
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 674093368}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.24778295, y: -2.5800421, z: 2392.4648}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &674093371
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 674093368}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b364eb0a4969114f8842252d411629b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  characterLoader: {fileID: 1252989564}
-  maxSelection: 4
-  characterPanel: {fileID: 492660020}
-  characterButtonPrefab: {fileID: 8768549784935748887, guid: c5376418909ca764a8977094b1368c68, type: 3}
-  startBattleButton: {fileID: 1838421731}
-  selectedCharacterPanel: {fileID: 1529534300}
-  selectedCharacterButtonPrefab: {fileID: 8768549784935748887, guid: a1f096e233ba4bf49a2c14e5e6d95abb, type: 3}
-  characterStatsPanel: {fileID: 1039661121}
-  characterNameText: {fileID: 2073632666}
-  healthText: {fileID: 1130396154}
-  attackText: {fileID: 2051596922}
-  defenseText: {fileID: 1164454934}
-  speedText: {fileID: 1178596829}
---- !u!114 &674093373
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 674093368}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ad8969faea6fbd4f80dbb259f7452fb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  selectedCharacters: []
---- !u!114 &674093374
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 674093368}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a4cb8248a56ab644482971de7f10bac7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  changeSceneButton: {fileID: 1838421731}
-  sceneToLoad: Mission
 --- !u!1 &753761189
 GameObject:
   m_ObjectHideFlags: 0
@@ -2948,7 +2862,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1252989565}
-  - component: {fileID: 1252989564}
+  - component: {fileID: 1252989566}
   m_Layer: 0
   m_Name: CharacterLoader object
   m_TagString: Untagged
@@ -2956,19 +2870,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1252989564
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1252989563}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2611de9e78368654bbea39ba2213d585, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  characters: []
 --- !u!4 &1252989565
 Transform:
   m_ObjectHideFlags: 0
@@ -2984,6 +2885,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1252989566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1252989563}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2611de9e78368654bbea39ba2213d585, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  characters: []
 --- !u!1 &1386515735
 GameObject:
   m_ObjectHideFlags: 0
@@ -3059,6 +2973,92 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1386515735}
   m_CullTransparentMesh: 1
+--- !u!1 &1427344578
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1427344580}
+  - component: {fileID: 1427344579}
+  - component: {fileID: 1427344582}
+  - component: {fileID: 1427344581}
+  m_Layer: 0
+  m_Name: Script Loader (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1427344579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1427344578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4cb8248a56ab644482971de7f10bac7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  changeSceneButton: {fileID: 1838421731}
+  sceneToLoad: Mission
+--- !u!4 &1427344580
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1427344578}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.24778295, y: -2.5800421, z: 2392.4648}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1427344581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1427344578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3931197b8cf005347b8ca1dfcda25c1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  selectedCharacters: []
+--- !u!114 &1427344582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1427344578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5105b01818fdf247b6925eede94de7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  characterLoader: {fileID: 1252989566}
+  maxSelection: 4
+  characterPanel: {fileID: 492660020}
+  characterButtonPrefab: {fileID: 8768549784935748887, guid: c5376418909ca764a8977094b1368c68, type: 3}
+  startBattleButton: {fileID: 1838421731}
+  selectedCharacterPanel: {fileID: 1529534300}
+  selectedCharacterButtonPrefab: {fileID: 8768549784935748887, guid: a1f096e233ba4bf49a2c14e5e6d95abb, type: 3}
+  characterStatsPanel: {fileID: 1039661121}
+  characterNameText: {fileID: 2073632666}
+  healthText: {fileID: 1130396154}
+  attackText: {fileID: 2051596922}
+  defenseText: {fileID: 1164454934}
+  speedText: {fileID: 1178596829}
 --- !u!1 &1529534299
 GameObject:
   m_ObjectHideFlags: 0
@@ -3690,4 +3690,4 @@ SceneRoots:
   - {fileID: 1880819891}
   - {fileID: 753761193}
   - {fileID: 1252989565}
-  - {fileID: 674093370}
+  - {fileID: 1427344580}

@@ -125,7 +125,7 @@ public class CharacterSelectionUI : MonoBehaviour
 
     void UpdateSelectedCharacterButtons()
     {
-        // Usuñ wszystkie stare przyciski
+        // Usuï¿½ wszystkie stare przyciski
         foreach (Transform child in selectedCharacterPanel)
         {
             Destroy(child.gameObject);
@@ -142,7 +142,7 @@ public class CharacterSelectionUI : MonoBehaviour
                 buttonText.text = selectedCharacter.name;
             }
 
-            // Dodaj listener usuwaj¹cy postaæ po klikniêciu na przycisk
+            // Dodaj listener usuwajï¿½cy postaï¿½ po klikniï¿½ciu na przycisk
             Button button = buttonObj.GetComponent<Button>();
             if (button != null)
             {
@@ -161,7 +161,7 @@ public class CharacterSelectionUI : MonoBehaviour
             // Aktualizuj UI
             UpdateSelectedCharacterButtons();
 
-            // Ustaw przycisk startowy na nieaktywny, jeœli liczba wybranych postaci jest mniejsza ni¿ maxSelection
+            // Ustaw przycisk startowy na nieaktywny, jeï¿½li liczba wybranych postaci jest mniejsza niï¿½ maxSelection
             if (CharacterManager.Instance.selectedCharacters.Count < maxSelection)
             {
                 startBattleButton.interactable = false;
