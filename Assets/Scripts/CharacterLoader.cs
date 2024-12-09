@@ -10,7 +10,7 @@ public class CharacterLoader : MonoBehaviour
     void Start()
     {
         LoadCharacters();
-        DisplayCharacters();
+        //DisplayCharacters();
     }
 
     void LoadCharacters()

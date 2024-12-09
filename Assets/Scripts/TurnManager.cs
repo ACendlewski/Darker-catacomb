@@ -5,14 +5,18 @@ using TMPro;
 
 public class TurnManager : MonoBehaviour
 {
-    public List<Character> playerTeam = new List<Character>(); // Grupa bohaterów
-    public List<Character> enemyTeam = new List<Character>();  // Grupa przeciwników
+    public TextMeshProUGUI turnNumberText; // Referencja do TMP do wyświetlania numeru tury
+    public int numberOfEnemies = 4; // Liczba przeciwników w drużynie
+
+    private List<Character> playerTeam = new List<Character>(); // Grupa bohaterów
+    private List<Character> enemyTeam = new List<Character>();  // Grupa przeciwników
+    private List<Character> allCharacters = new List<Character>(); // Wszystkie dostępne postacie
 
     private List<Character> turnOrder = new List<Character>(); // Kolejność tur
     private int currentTurnIndex = 0;
     private int turnNumber = 1; // Numer tury
 
-    public TextMeshProUGUI turnNumberText; // Referencja do TMP do wyświetlania numeru tury
+    public CharacterLoader characterLoader;
 
     void Start()
     {
@@ -21,6 +25,31 @@ public class TurnManager : MonoBehaviour
             Debug.LogError("TurnNumberText is not assigned!");
             return;
         }
+        StartCoroutine(WaitForCharacterLoader());
+    }
+    IEnumerator WaitForCharacterLoader()
+    {
+        // Czekamy na załadowanie postaci z CharacterLoader
+        yield return new WaitUntil(() => characterLoader.characters != null && characterLoader.characters.Count > 0);
+
+        // Pobierz postacie z CharacterLoader
+        allCharacters = characterLoader.characters;
+        Debug.Log("All characters:");
+        foreach (Character character in allCharacters)
+        {
+            Debug.Log($"Character: {character.name} (Health: {character.health}, Speed: {character.speed})");
+        }
+
+        // Pobierz wybrane postacie gracza
+        playerTeam = CharacterManager.Instance.selectedCharacters;
+
+        // Wybierz przeciwników losowo z pozostałych postaci
+        SelectRandomEnemies();
+        StartCoroutine(WaitForEnemies());
+    }
+        IEnumerator WaitForEnemies() {
+
+        yield return new WaitUntil(() => enemyTeam != null && enemyTeam.Count > 0);
 
         // Łączenie drużyn graczy i przeciwników
         turnOrder.AddRange(playerTeam);
@@ -29,8 +58,34 @@ public class TurnManager : MonoBehaviour
         // Sortowanie kolejności tur według szybkości (malejąco)
         turnOrder.Sort((a, b) => b.speed.CompareTo(a.speed));
 
+        // Logowanie drużyn
+        LogTeams();
+
         UpdateTurnNumberText(); // Aktualizuj wyświetlany numer tury
         StartTurn(); // Rozpoczynamy pierwszą turę
+    
+    }
+
+    void SelectRandomEnemies()
+    {
+        List<Character> availableEnemies = new List<Character>(allCharacters); // Tworzymy kopię listy wszystkich postaci
+
+        // Usuwamy wybrane postacie gracza z listy dostępnych przeciwników
+        foreach (Character selected in playerTeam)
+        {
+            availableEnemies.Remove(selected);
+        }
+
+        Debug.Log("Available enemies after removing player team: " + availableEnemies.Count);
+
+        // Losowo wybieramy przeciwników
+        while (enemyTeam.Count < numberOfEnemies && availableEnemies.Count > 0)
+        {
+            int randomIndex = Random.Range(0, availableEnemies.Count);
+            enemyTeam.Add(availableEnemies[randomIndex]);
+            availableEnemies.RemoveAt(randomIndex);
+        }
+        
     }
 
     // Rozpoczęcie tury
@@ -43,7 +98,7 @@ public class TurnManager : MonoBehaviour
             if (currentCharacter.IsAlive())
             {
                 Debug.Log("It's " + currentCharacter.name + "'s turn!");
-                PerformAction(currentCharacter); // Tu wywołujemy akcję (atakowanie, leczenie itd.)
+         
             }
             else
             {
@@ -52,31 +107,7 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-    // Wykonywanie akcji
-    void PerformAction(Character actingCharacter)
-    {
-        // Na przykładzie prostego ataku, postać z drużyny gracza atakuje przeciwnika, i vice versa
-        if (playerTeam.Contains(actingCharacter))
-        {
-            // Bohater gracza atakuje przeciwnika (przyjmujemy na razie, że atakuje pierwszego żywego wroga)
-            Character target = GetFirstAliveCharacter(enemyTeam);
-            if (target != null)
-            {
-                actingCharacter.Attack(target);
-            }
-        }
-        else
-        {
-            // Wróg atakuje gracza (atak pierwszego żywego bohatera)
-            Character target = GetFirstAliveCharacter(playerTeam);
-            if (target != null)
-            {
-                actingCharacter.Attack(target);
-            }
-        }
 
-        EndTurn(); // Po akcji kończymy turę
-    }
 
     // Zakończenie tury
     public void EndTurn()
@@ -111,4 +142,28 @@ public class TurnManager : MonoBehaviour
     {
         turnNumberText.text = "Turn: " + turnNumber;
     }
+
+    void LogTeams()
+    {
+        Debug.Log("Player Team:");
+        foreach (Character player in playerTeam)
+        {
+            Debug.Log($"- {player.name} (Health: {player.health}, Speed: {player.speed})");
+        }
+
+        Debug.Log("Enemy Team:");
+        foreach (Character enemy in enemyTeam)
+        {
+            Debug.Log($"- {enemy.name} (Health: {enemy.health}, Speed: {enemy.speed})");
+        }
+
+        Debug.Log("Turn Order:");
+        foreach (Character character in turnOrder)
+        {
+            Debug.Log($"- {character.name} (Speed: {character.speed})");
+        }
+    }
+
+
+
 }

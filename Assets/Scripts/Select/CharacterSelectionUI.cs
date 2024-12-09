@@ -23,6 +23,7 @@ public class CharacterSelectionUI : MonoBehaviour
     public TextMeshProUGUI attackText;
     public TextMeshProUGUI defenseText;
     public TextMeshProUGUI speedText;
+    public TextMeshProUGUI skillsText;
 
     void Start()
     {
@@ -177,6 +178,19 @@ public class CharacterSelectionUI : MonoBehaviour
         attackText.text = "Attack: " + character.attack;
         defenseText.text = "Defense: " + character.defense;
         speedText.text = "Speed: " + character.speed;
+
+        if (character.skills != null && character.skills.Count > 0)
+        {
+            skillsText.text = "Skills:\n";
+            foreach (Skill skill in character.skills)
+            {
+                skillsText.text += $"- {skill.name} (Dmg: {skill.damage}, Hit: {skill.hitChance}%, Crit: {skill.critChance}%, Mod: ±{skill.damageModifier}%)\n";
+            }
+        }
+        else
+        {
+            skillsText.text = "Skills: None";
+        }
     }
 
     public void HideCharacterStats()
