@@ -17,6 +17,7 @@ public class TurnManager : MonoBehaviour
     private int turnNumber = 1; // Numer tury
 
     public CharacterLoader characterLoader;
+    public CharacterStatsUI characterStatsUI;
 
     void Start()
     {
@@ -29,6 +30,8 @@ public class TurnManager : MonoBehaviour
     }
     IEnumerator WaitForCharacterLoader()
     {
+      
+
         // Czekamy na załadowanie postaci z CharacterLoader
         yield return new WaitUntil(() => characterLoader.characters != null && characterLoader.characters.Count > 0);
 
@@ -40,14 +43,17 @@ public class TurnManager : MonoBehaviour
             Debug.Log($"Character: {character.name} (Health: {character.health}, Speed: {character.speed})");
         }
 
-        // Pobierz wybrane postacie gracza
-        playerTeam = CharacterManager.Instance.selectedCharacters;
+        // Pobierz wybrane postacie 
+            playerTeam = CharacterManager.Instance.selectedCharacters;
+        
+        
 
         // Wybierz przeciwników losowo z pozostałych postaci
         SelectRandomEnemies();
         StartCoroutine(WaitForEnemies());
     }
-        IEnumerator WaitForEnemies() {
+    IEnumerator WaitForEnemies()
+    {
 
         yield return new WaitUntil(() => enemyTeam != null && enemyTeam.Count > 0);
 
@@ -63,7 +69,7 @@ public class TurnManager : MonoBehaviour
 
         UpdateTurnNumberText(); // Aktualizuj wyświetlany numer tury
         StartTurn(); // Rozpoczynamy pierwszą turę
-    
+
     }
 
     void SelectRandomEnemies()
@@ -82,11 +88,16 @@ public class TurnManager : MonoBehaviour
         while (enemyTeam.Count < numberOfEnemies && availableEnemies.Count > 0)
         {
             int randomIndex = Random.Range(0, availableEnemies.Count);
-            enemyTeam.Add(availableEnemies[randomIndex]);
+            Character selectedEnemy = availableEnemies[randomIndex];
+            enemyTeam.Add(selectedEnemy);
+
+            // Dodajemy "(Enemy)" przed nazwą postaci
+            selectedEnemy.name = "(Enemy) " + selectedEnemy.name;
+
             availableEnemies.RemoveAt(randomIndex);
         }
-        
     }
+
 
     // Rozpoczęcie tury
     void StartTurn()
@@ -98,7 +109,7 @@ public class TurnManager : MonoBehaviour
             if (currentCharacter.IsAlive())
             {
                 Debug.Log("It's " + currentCharacter.name + "'s turn!");
-         
+                characterStatsUI.ShowCharacterStats(currentCharacter);
             }
             else
             {
@@ -120,6 +131,7 @@ public class TurnManager : MonoBehaviour
             turnNumber++; // Zwiększ numer tury po zakończeniu cyklu
             UpdateTurnNumberText(); // Aktualizuj wyświetlany numer tury
         }
+        characterStatsUI.HideCharacterStats();
 
         StartTurn(); // Rozpocznij turę kolejnej postaci
     }
@@ -164,6 +176,18 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-
+    void AddTestCharacters()
+    {
+        // Dodajemy testową postać do drużyny gracza
+        playerTeam.Add(new Character()
+        {
+            name = "Test Warrior",
+            health = 1000,
+            attack = 25,
+            defense = 10,
+            speed = 50,
+            characterPrefab = null // Możesz przypisać prefab, jeśli chcesz, ale na razie jest null
+        });
+    }
 
 }
