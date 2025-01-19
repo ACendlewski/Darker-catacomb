@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI; // Added for UI components
 
 public class SelectedCharactersDisplay : MonoBehaviour
 {
-    public TextMeshProUGUI selectedCharactersText;  // Tekst na UI do wyœwietlania postaci
+    public TextMeshProUGUI selectedCharactersText;  // Text for displaying selected characters
 
     void Start()
     {
@@ -13,27 +14,28 @@ public class SelectedCharactersDisplay : MonoBehaviour
 
     public void UpdateSelectedCharactersText()
     {
-        // SprawdŸ, czy `CharacterManager` jest dostêpny
+        // Check if `CharacterManager` is available
         if (CharacterManager.Instance == null || CharacterManager.Instance.selectedCharacters.Count == 0)
         {
             selectedCharactersText.text = "No characters selected.";
             return;
         }
 
-        // Pobierz wybrane postacie
+        // Get selected characters
         List<Character> selectedCharacters = CharacterManager.Instance.selectedCharacters;
 
-        // Tworzymy string do wyœwietlenia postaci
+        // Create string to display characters
         string charactersToDisplay = "Selected characters:\n";
         foreach (Character character in selectedCharacters)
         {
             charactersToDisplay += character.name + "\n";
         }
 
-        // Aktualizacja tekstu na UI
+        // Update the text on the UI
         selectedCharactersText.text = charactersToDisplay;
     }
-    // Dodaj funkcjê do odœwie¿enia tekstu po wyborze postaci
+
+    // Add method to refresh text after character selection
     public void OnCharacterSelected()
     {
         UpdateSelectedCharactersText();

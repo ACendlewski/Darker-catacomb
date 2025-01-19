@@ -11,6 +11,10 @@ public class CharacterLoader : MonoBehaviour
     {
         LoadCharacters();
         //DisplayCharacters();
+        foreach (Character character in characters)
+        {
+            character.index = characters.IndexOf(character); // Ustawienie wartości pola index
+        }
     }
 
     void LoadCharacters()
@@ -25,6 +29,14 @@ public class CharacterLoader : MonoBehaviour
         {
             Debug.LogError("Cannot find characters.json file");
         }
+
+        foreach (Character character in characters)
+    {
+        foreach (Skill skill in character.skills)
+        {
+            skill.skillIcon = Resources.Load<Sprite>("Skills/" + skill.name);
+        }
+    }
     }
 
     void DisplayCharacters()

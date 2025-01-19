@@ -24,6 +24,7 @@ public class CharacterSelectionUI : MonoBehaviour
     public TextMeshProUGUI defenseText;
     public TextMeshProUGUI speedText;
     public TextMeshProUGUI skillsText;
+    public Transform skillsContainer; // Container for skill icons
 
     void Start()
     {
@@ -126,13 +127,11 @@ public class CharacterSelectionUI : MonoBehaviour
 
     void UpdateSelectedCharacterButtons()
     {
-        // Usu� wszystkie stare przyciski
         foreach (Transform child in selectedCharacterPanel)
         {
             Destroy(child.gameObject);
         }
 
-        // Dodaj nowe przyciski dla wybranych postaci
         foreach (Character selectedCharacter in CharacterManager.Instance.selectedCharacters)
         {
             GameObject buttonObj = Instantiate(selectedCharacterButtonPrefab, selectedCharacterPanel);
@@ -143,7 +142,6 @@ public class CharacterSelectionUI : MonoBehaviour
                 buttonText.text = selectedCharacter.name;
             }
 
-            // Dodaj listener usuwaj�cy posta� po klikni�ciu na przycisk
             Button button = buttonObj.GetComponent<Button>();
             if (button != null)
             {
@@ -159,10 +157,10 @@ public class CharacterSelectionUI : MonoBehaviour
             CharacterManager.Instance.selectedCharacters.Remove(character);
             Debug.Log(character.name + " has been removed!");
 
-            // Aktualizuj UI
+            // Update UI
             UpdateSelectedCharacterButtons();
 
-            // Ustaw przycisk startowy na nieaktywny, je�li liczba wybranych postaci jest mniejsza ni� maxSelection
+            // Set start button to inactive if the number of selected characters is less than maxSelection
             if (CharacterManager.Instance.selectedCharacters.Count < maxSelection)
             {
                 startBattleButton.interactable = false;
@@ -185,6 +183,7 @@ public class CharacterSelectionUI : MonoBehaviour
             foreach (Skill skill in character.skills)
             {
                 skillsText.text += $"- {skill.name} (Dmg: {skill.damage}, Hit: {skill.hitChance}%, Crit: {skill.critChance}%, Mod: ±{skill.damageModifier}%)\n";
+
             }
         }
         else

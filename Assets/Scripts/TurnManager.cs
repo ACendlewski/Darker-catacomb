@@ -2,40 +2,40 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI; // Added namespace for UI components
 
 public class TurnManager : MonoBehaviour
 {
-    public TextMeshProUGUI turnNumberText; // Referencja do TMP do wyświetlania numeru tury
-    public int numberOfEnemies = 4; // Liczba przeciwników w drużynie
+    public TextMeshProUGUI turnNumberText;
+    public TextMeshProUGUI turnOrderText; // UI element for displaying turn order
+    public GameObject actionMenuPanel; // New panel for action buttons
+    public GameObject actionButtonPrefab; // Prefab for action buttons
+    public int numberOfEnemies = 4;
 
-    private List<Character> playerTeam = new List<Character>(); // Grupa bohaterów
-    private List<Character> enemyTeam = new List<Character>();  // Grupa przeciwników
-    private List<Character> allCharacters = new List<Character>(); // Wszystkie dostępne postacie
+    private List<Character> playerTeam = new List<Character>();
+    private List<Character> enemyTeam = new List<Character>();
+    private List<Character> allCharacters = new List<Character>();
 
-    private List<Character> turnOrder = new List<Character>(); // Kolejność tur
+    private List<Character> turnOrder = new List<Character>();
     private int currentTurnIndex = 0;
-    private int turnNumber = 1; // Numer tury
+    private int turnNumber = 1;
 
     public CharacterLoader characterLoader;
     public CharacterStatsUI characterStatsUI;
 
     void Start()
     {
-        if (turnNumberText == null)
+        if (turnNumberText == null || turnOrderText == null || actionMenuPanel == null || actionButtonPrefab == null)
         {
-            Debug.LogError("TurnNumberText is not assigned!");
+            Debug.LogError("TurnNumberText, TurnOrderText, ActionMenuPanel, or ActionButtonPrefab is not assigned!");
             return;
         }
         StartCoroutine(WaitForCharacterLoader());
     }
     IEnumerator WaitForCharacterLoader()
     {
-      
-
-        // Czekamy na załadowanie postaci z CharacterLoader
         yield return new WaitUntil(() => characterLoader.characters != null && characterLoader.characters.Count > 0);
 
-        // Pobierz postacie z CharacterLoader
         allCharacters = characterLoader.characters;
         Debug.Log("All characters:");
         foreach (Character character in allCharacters)
@@ -43,40 +43,31 @@ public class TurnManager : MonoBehaviour
             Debug.Log($"Character: {character.name} (Health: {character.health}, Speed: {character.speed})");
         }
 
-        // Pobierz wybrane postacie 
-            playerTeam = CharacterManager.Instance.selectedCharacters;
-        
-        
+        playerTeam = CharacterManager.Instance.selectedCharacters;
 
-        // Wybierz przeciwników losowo z pozostałych postaci
         SelectRandomEnemies();
         StartCoroutine(WaitForEnemies());
     }
     IEnumerator WaitForEnemies()
     {
-
         yield return new WaitUntil(() => enemyTeam != null && enemyTeam.Count > 0);
 
-        // Łączenie drużyn graczy i przeciwników
         turnOrder.AddRange(playerTeam);
         turnOrder.AddRange(enemyTeam);
 
-        // Sortowanie kolejności tur według szybkości (malejąco)
         turnOrder.Sort((a, b) => b.speed.CompareTo(a.speed));
 
-        // Logowanie drużyn
         LogTeams();
+        UpdateTurnOrderText(); // Update the turn order display
 
-        UpdateTurnNumberText(); // Aktualizuj wyświetlany numer tury
-        StartTurn(); // Rozpoczynamy pierwszą turę
-
+        UpdateTurnNumberText();
+        StartTurn();
     }
 
     void SelectRandomEnemies()
     {
-        List<Character> availableEnemies = new List<Character>(allCharacters); // Tworzymy kopię listy wszystkich postaci
+        List<Character> availableEnemies = new List<Character>(allCharacters);
 
-        // Usuwamy wybrane postacie gracza z listy dostępnych przeciwników
         foreach (Character selected in playerTeam)
         {
             availableEnemies.Remove(selected);
@@ -84,22 +75,18 @@ public class TurnManager : MonoBehaviour
 
         Debug.Log("Available enemies after removing player team: " + availableEnemies.Count);
 
-        // Losowo wybieramy przeciwników
         while (enemyTeam.Count < numberOfEnemies && availableEnemies.Count > 0)
         {
             int randomIndex = Random.Range(0, availableEnemies.Count);
             Character selectedEnemy = availableEnemies[randomIndex];
             enemyTeam.Add(selectedEnemy);
 
-            // Dodajemy "(Enemy)" przed nazwą postaci
             selectedEnemy.name = "(Enemy) " + selectedEnemy.name;
 
             availableEnemies.RemoveAt(randomIndex);
         }
     }
 
-
-    // Rozpoczęcie tury
     void StartTurn()
     {
         if (turnOrder.Count > 0 && currentTurnIndex < turnOrder.Count)
@@ -110,33 +97,106 @@ public class TurnManager : MonoBehaviour
             {
                 Debug.Log("It's " + currentCharacter.name + "'s turn!");
                 characterStatsUI.ShowCharacterStats(currentCharacter);
+                ShowActionMenu(currentCharacter); // Show action menu for the current character
             }
             else
             {
-                EndTurn(); // Jeśli postać zginęła, natychmiast kończymy turę
+                EndTurn(); // If the character is dead, immediately end the turn
             }
         }
     }
 
-
-
-    // Zakończenie tury
     public void EndTurn()
     {
         currentTurnIndex++;
 
         if (currentTurnIndex >= turnOrder.Count)
         {
-            currentTurnIndex = 0; // Restart cyklu tur
-            turnNumber++; // Zwiększ numer tury po zakończeniu cyklu
-            UpdateTurnNumberText(); // Aktualizuj wyświetlany numer tury
+            currentTurnIndex = 0;
+            turnNumber++;
+            UpdateTurnNumberText();
         }
         characterStatsUI.HideCharacterStats();
+        HideActionMenu(); // Hide action menu when the turn ends
 
-        StartTurn(); // Rozpocznij turę kolejnej postaci
+        UpdateTurnOrderText(); // Update the turn order display
+        StartTurn();
     }
 
-    // Funkcja zwracająca pierwszą żyjącą postać z danej drużyny
+    void ShowActionMenu(Character character)
+    {
+        if (actionMenuPanel == null || actionButtonPrefab == null)
+        {
+            Debug.LogError("ActionMenuPanel or ActionButtonPrefab is not assigned!");
+            return;
+        }
+
+        if (character.skills == null || character.skills.Count == 0)
+        {
+            Debug.LogError("Character skills are not initialized or empty!");
+            return;
+        }
+
+        actionMenuPanel.SetActive(true);
+        // Clear existing buttons
+        foreach (Transform child in actionMenuPanel.transform)
+        {
+            Destroy(child.gameObject);
+        }
+
+        foreach (Skill skill in character.skills)
+        {
+            GameObject button = Instantiate(actionButtonPrefab, actionMenuPanel.transform);
+            if (button == null)
+            {
+                Debug.LogError("Failed to instantiate action button prefab!");
+                continue;
+            }
+
+            TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
+            if (buttonText == null)
+            {
+                // Add the TextMeshProUGUI component programmatically
+                buttonText = button.AddComponent<TextMeshProUGUI>();
+            }
+
+            Button buttonComponent = button.GetComponent<Button>();
+            if (buttonComponent == null)
+            {
+                Debug.LogError("Button component is missing on the prefab!");
+                continue;
+            }
+
+            buttonText.text = skill.name;
+            buttonComponent.onClick.AddListener(() => OnActionButtonClicked(character, skill));
+        }
+    }
+
+    void HideActionMenu()
+    {
+        actionMenuPanel.SetActive(false);
+    }
+
+    void OnActionButtonClicked(Character character, Skill skill)
+    {
+        // Implement the logic for when an action button is clicked
+        // For example, find the target and call character.Attack(target, skill);
+        Debug.Log($"{character.name} chose to use {skill.name}!");
+        // Hide the action menu after selecting an action
+        HideActionMenu();
+        EndTurn(); // End the turn after the action
+    }
+
+    void UpdateTurnOrderText()
+    {
+        string turnOrderDisplay = "Turn Order:\n";
+        foreach (Character character in turnOrder)
+        {
+            turnOrderDisplay += $"SPD: {character.speed} {character.name} (HP: {character.health})\n";
+        }
+        turnOrderText.text = turnOrderDisplay; // Update the UI text
+    }
+
     Character GetFirstAliveCharacter(List<Character> team)
     {
         foreach (Character member in team)
@@ -146,10 +206,9 @@ public class TurnManager : MonoBehaviour
                 return member;
             }
         }
-        return null; // Jeśli żadna postać nie żyje
+        return null;
     }
 
-    // Aktualizacja wyświetlania numeru tury
     void UpdateTurnNumberText()
     {
         turnNumberText.text = "Turn: " + turnNumber;
@@ -178,7 +237,6 @@ public class TurnManager : MonoBehaviour
 
     void AddTestCharacters()
     {
-        // Dodajemy testową postać do drużyny gracza
         playerTeam.Add(new Character()
         {
             name = "Test Warrior",
@@ -186,7 +244,7 @@ public class TurnManager : MonoBehaviour
             attack = 25,
             defense = 10,
             speed = 50,
-            characterPrefab = null // Możesz przypisać prefab, jeśli chcesz, ale na razie jest null
+            characterPrefab = null
         });
     }
 
