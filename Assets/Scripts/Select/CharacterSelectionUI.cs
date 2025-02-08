@@ -1,3 +1,5 @@
+
+using System.Collections.Generic;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -16,7 +18,7 @@ public class CharacterSelectionUI : MonoBehaviour
     public Transform selectedCharacterPanel;
     public GameObject selectedCharacterButtonPrefab;
 
-    // Panel stat
+    // Panel statystyk
     public GameObject characterStatsPanel;
     public TextMeshProUGUI characterNameText;
     public TextMeshProUGUI healthText;
@@ -24,7 +26,14 @@ public class CharacterSelectionUI : MonoBehaviour
     public TextMeshProUGUI defenseText;
     public TextMeshProUGUI speedText;
     public TextMeshProUGUI skillsText;
-    public Transform skillsContainer; // Container for skill icons
+    public Transform skillsContainer;
+
+    // Kontener postaci i podgląd awatara
+    public Transform characterContainer;
+    private List<KeyValuePair<Character, GameObject>> activeCharacterPreviews = new List<KeyValuePair<Character, GameObject>>();
+    public Vector3 characterSpacing = new Vector3(2f, 0f, 0f); // Odstęp 2 jednostek w poziomie
+
+    private GameObject currentCharacterPreview; // Przechowywanie instancji aktualnego podglądu postaci
 
     void Start()
     {
@@ -32,6 +41,20 @@ public class CharacterSelectionUI : MonoBehaviour
         {
             Debug.LogError("CharacterLoader is not assigned!");
             return;
+        }
+
+        // Jeśli nie przypisano kontenera, szukamy go w scenie
+        if (characterContainer == null)
+        {
+            GameObject characterContainerObject = GameObject.Find("Characters");
+            if (characterContainerObject != null)
+            {
+                characterContainer = characterContainerObject.transform;
+            }
+            else
+            {
+                Debug.LogError("Character container not found in the scene!");
+            }
         }
 
         StartCoroutine(WaitForCharactersToLoad());
@@ -47,21 +70,14 @@ public class CharacterSelectionUI : MonoBehaviour
         CreateCharacterButtons();
         UpdateSelectedCharacterButtons();
         startBattleButton.interactable = false;
-
         characterStatsPanel.SetActive(false);
     }
 
     void CreateCharacterButtons()
     {
-        if (characterPanel == null)
+        if (characterPanel == null || characterButtonPrefab == null)
         {
-            Debug.LogError("CharacterPanel is not assigned!");
-            return;
-        }
-
-        if (characterButtonPrefab == null)
-        {
-            Debug.LogError("CharacterButtonPrefab is not assigned!");
+            Debug.LogError("CharacterPanel or CharacterButtonPrefab is not assigned!");
             return;
         }
 
@@ -69,22 +85,15 @@ public class CharacterSelectionUI : MonoBehaviour
         {
             GameObject buttonObj = Instantiate(characterButtonPrefab, characterPanel);
             Button button = buttonObj.GetComponent<Button>();
-
-            if (button == null)
-            {
-                Debug.LogError("Button component is missing on the prefab!");
-                continue;
-            }
-
             TextMeshProUGUI buttonText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
-            if (buttonText == null)
+
+            if (button == null || buttonText == null)
             {
-                Debug.LogError("TextMeshProUGUI component is missing on the prefab!");
+                Debug.LogError("Button or TextMeshProUGUI component is missing on the prefab!");
                 continue;
             }
 
             buttonText.text = character.name;
-
             button.onClick.AddListener(() => SelectCharacter(character));
 
             EventTrigger trigger = buttonObj.AddComponent<EventTrigger>();
@@ -117,12 +126,39 @@ public class CharacterSelectionUI : MonoBehaviour
             {
                 startBattleButton.interactable = true;
             }
+
+            // Zaktualizuj podgląd z ostatnią wybraną postacią
+            UpdateCharacterPreview(character);
         }
         else
         {
             Debug.Log("You have already selected the maximum number of characters.");
         }
         DisplaySelectedCharactersInConsole();
+    }
+
+    void UpdateCharacterPreview(Character character)
+    {
+        string prefabName = character.name.Replace("(Enemy) ", "").Trim();
+        GameObject characterPrefab = Resources.Load<GameObject>("Prefabs/" + prefabName);
+
+        if (characterPrefab == null)
+        {
+            Debug.LogError("Character prefab not found: " + prefabName);
+            return;
+        }
+
+        // Obliczenie pozycji na podstawie liczby wybranych postaci
+        int characterCount = activeCharacterPreviews.Count;
+        Vector3 spawnPosition = characterContainer.position + characterSpacing * characterCount;
+
+        GameObject characterObject = Instantiate(characterPrefab, characterContainer);
+        characterObject.name = character.name;
+        characterObject.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
+        characterObject.transform.position = spawnPosition;
+
+        // Dodanie nowej instancji do listy
+        activeCharacterPreviews.Add(new KeyValuePair<Character, GameObject>(character, characterObject));
     }
 
     void UpdateSelectedCharacterButtons()
@@ -157,16 +193,27 @@ public class CharacterSelectionUI : MonoBehaviour
             CharacterManager.Instance.selectedCharacters.Remove(character);
             Debug.Log(character.name + " has been removed!");
 
-            // Update UI
             UpdateSelectedCharacterButtons();
 
-            // Set start button to inactive if the number of selected characters is less than maxSelection
             if (CharacterManager.Instance.selectedCharacters.Count < maxSelection)
             {
                 startBattleButton.interactable = false;
             }
+
+            // Znajdź pierwszą instancję danej postaci w liście i usuń ją
+            for (int i = 0; i < activeCharacterPreviews.Count; i++)
+            {
+                if (activeCharacterPreviews[i].Key == character)
+                {
+                    Destroy(activeCharacterPreviews[i].Value);
+                    activeCharacterPreviews.RemoveAt(i);
+                    break; // Usuwamy tylko pierwszą instancję i przerywamy pętlę
+                }
+            }
         }
     }
+
+
 
     public void ShowCharacterStats(Character character)
     {
@@ -183,13 +230,13 @@ public class CharacterSelectionUI : MonoBehaviour
             foreach (Skill skill in character.skills)
             {
                 skillsText.text += $"- {skill.name} (Dmg: {skill.damage}, Hit: {skill.hitChance}%, Crit: {skill.critChance}%, Mod: ±{skill.damageModifier}%)\n";
-
             }
         }
         else
         {
             skillsText.text = "Skills: None";
         }
+
     }
 
     public void HideCharacterStats()
@@ -212,7 +259,6 @@ public class CharacterSelectionUI : MonoBehaviour
         }
 
         selectedCharacters = selectedCharacters.TrimEnd(',', ' ');
-
         Debug.Log(selectedCharacters);
     }
 

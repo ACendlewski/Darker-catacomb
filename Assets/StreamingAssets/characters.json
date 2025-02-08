@@ -13,30 +13,6 @@
             ]
         },
         {
-            "name": "Villain",
-            "health": 150,
-            "attack": 25,
-            "defense": 10,
-            "speed": 8,
-            "skills": [
-                { "name": "Dark Slash", "damage": 30, "hitChance": 80, "critChance": 25, "damageModifier": 20 },
-                { "name": "Shadow Strike", "damage": 25, "hitChance": 85, "critChance": 20, "damageModifier": 15 },
-                { "name": "Corrupt Blade", "damage": 35, "hitChance": 70, "critChance": 30, "damageModifier": 25 }
-            ]
-        },
-        {
-            "name": "Warrior",
-            "health": 120,
-            "attack": 22,
-            "defense": 18,
-            "speed": 12,
-            "skills": [
-                { "name": "Power Slash", "damage": 40, "hitChance": 85, "critChance": 15, "damageModifier": 10 },
-                { "name": "Iron Blow", "damage": 35, "hitChance": 90, "critChance": 10, "damageModifier": 5 },
-                { "name": "Whirlwind", "damage": 45, "hitChance": 75, "critChance": 20, "damageModifier": 20 }
-            ]
-        },
-        {
             "name": "Mage",
             "health": 80,
             "attack": 30,
@@ -70,30 +46,6 @@
                 { "name": "Holy Smite", "damage": 30, "hitChance": 85, "critChance": 15, "damageModifier": 10 },
                 { "name": "Radiant Strike", "damage": 25, "hitChance": 90, "critChance": 10, "damageModifier": 5 },
                 { "name": "Sanctified Blow", "damage": 35, "hitChance": 80, "critChance": 20, "damageModifier": 15 }
-            ]
-        },
-        {
-            "name": "Archer",
-            "health": 85,
-            "attack": 24,
-            "defense": 12,
-            "speed": 18,
-            "skills": [
-                { "name": "Piercing Arrow", "damage": 35, "hitChance": 85, "critChance": 25, "damageModifier": 15 },
-                { "name": "Quick Shot", "damage": 20, "hitChance": 95, "critChance": 10, "damageModifier": 5 },
-                { "name": "Rain of Arrows", "damage": 25, "hitChance": 80, "critChance": 20, "damageModifier": 10 }
-            ]
-        },
-        {
-            "name": "Sorcerer",
-            "health": 70,
-            "attack": 35,
-            "defense": 8,
-            "speed": 15,
-            "skills": [
-                { "name": "Lightning Bolt", "damage": 45, "hitChance": 80, "critChance": 20, "damageModifier": 15 },
-                { "name": "Mana Spark", "damage": 30, "hitChance": 90, "critChance": 15, "damageModifier": 10 },
-                { "name": "Arcane Fury", "damage": 50, "hitChance": 75, "critChance": 25, "damageModifier": 20 }
             ]
         },
         {

@@ -1,74 +1,106 @@
 using UnityEngine;
 using TMPro;
-using UnityEngine.UI; // Added for UI components
+using UnityEngine.UI;
 
 public class CharacterStatsUI : MonoBehaviour
 {
     public TextMeshProUGUI characterNameText;
-    public Slider healthSlider; // Dodane pole dla paska zdrowia
+    public Slider healthSlider;
     public TextMeshProUGUI healthText;
     public TextMeshProUGUI attackText;
     public TextMeshProUGUI defenseText;
     public TextMeshProUGUI speedText;
     public TextMeshProUGUI skillsText;
 
-    public GameObject statsPanel; // Panel for displaying stats
-    public Transform skillsContainer; // Container for skill icons
+    public GameObject statsPanel;
+    public GameObject skillButtonPrefab;
+    public Transform skillsContainer;
 
     public Transform characterContainer;
     public Vector3 characterSpacing = new Vector3(100f, 0f, 0f);
 
+    void Start()
+    {
+        if (CombatManager.Instance != null) { }
+        if (TurnManager.Instance != null) { }
+
+        if (characterContainer == null)
+        {
+            GameObject characterContainerObject = GameObject.Find("Characters");
+            if (characterContainerObject != null)
+            {
+                characterContainer = characterContainerObject.transform;
+            }
+            else
+            {
+                Debug.LogError("Character container not found in the scene!");
+            }
+        }
+    }
+
     public void ShowCharacterStats(Character character)
     {
+        if (statsPanel == null || character == null) return;
         statsPanel.SetActive(true);
 
         characterNameText.text = character.name;
 
+        healthSlider.maxValue = character.maxHealth;
         healthSlider.value = character.health;
-        healthText.text = character.health.ToString();
-        healthText.transform.position = new Vector3(healthSlider.transform.position.x, healthSlider.transform.position.y + 20f, healthSlider.transform.position.z);
-        healthText.fontSize = 12f;
+        healthText.text = $"{character.health} / {character.maxHealth}";
 
         attackText.text = "ATT: " + character.attack;
         defenseText.text = "DEF: " + character.defense;
         speedText.text = "SPD: " + character.speed;
 
-        GameObject characterPrefab = Resources.Load<GameObject>(character.name);
+        string prefabName = character.name.Replace("(Enemy) ", "").Trim();
+        GameObject characterPrefab = Resources.Load<GameObject>("Prefabs/" + prefabName);
+
         if (characterPrefab == null)
         {
-            characterPrefab = Resources.Load<GameObject>("Hero");
+            Debug.LogError("Character prefab not found: " + prefabName);
+            return;
         }
-        if (characterPrefab != null)
+
+        GameObject existingCharacter = characterContainer.Find(character.name)?.gameObject;
+        if (existingCharacter == null)
         {
-            GameObject characterObject = Instantiate(characterPrefab);
+            Debug.Log($"Instantiating character: {character.name}");
+            GameObject characterObject = Instantiate(characterPrefab, characterContainer);
             characterObject.name = character.name;
+            characterObject.transform.localPosition = character.index * characterSpacing;
         }
 
-        GameObject characterPrefabObject = Instantiate(characterPrefab);
-        characterPrefabObject.transform.SetParent(characterContainer);
-        characterPrefabObject.transform.localPosition = character.index * characterSpacing;
-
-        // Clear previous skill icons
-        foreach (Transform child in skillsContainer)
+        // Usuń poprzednie przyciski skilli
+        for (int i = skillsContainer.childCount - 1; i >= 0; i--)
         {
-            Destroy(child.gameObject);
+            Destroy(skillsContainer.GetChild(i).gameObject);
         }
 
-        // Display skill icons
+        // Sprawdź, czy prefab przycisku jest przypisany
+        if (skillButtonPrefab == null)
+        {
+            Debug.LogError("Skill Button Prefab is not assigned!");
+            return;
+        }
+
+        // Wyświetl skille
         if (character.skills != null && character.skills.Count > 0)
         {
-            skillsText.text = "Skills:\n";
             foreach (Skill skill in character.skills)
             {
-                // Utwórz przycisk skilla
-                GameObject skillButton = new GameObject(skill.name);
-                Button button = skillButton.AddComponent<Button>();
-                button.onClick.AddListener(() => UseSkill(skill));
-                button.transform.SetParent(skillsContainer);
+                GameObject skillButton = Instantiate(skillButtonPrefab, skillsContainer);
+                skillButton.name = skill.name;
 
-                // Przypisz ikonę skilla do przycisku
-                Image iconImage = skillButton.AddComponent<Image>();
-                iconImage.sprite = skill.skillIcon;
+                Button button = skillButton.GetComponent<Button>();
+                Image iconImage = skillButton.GetComponent<Image>();
+
+                if (iconImage != null)
+                {
+                    iconImage.sprite = skill.skillIcon;
+                }
+
+                button.onClick.AddListener(() => UseSkill(skill, character)); // Pass the character here
             }
         }
         else
@@ -77,20 +109,28 @@ public class CharacterStatsUI : MonoBehaviour
         }
     }
 
-    public void UseSkill(Skill skill)
+    public void UseSkill(Skill skill, Character character)
     {
-        // Wywołaj metodę w skrypcie CombatManager
-        CombatManager.instance.UseSkill(skill);
-    }
-    public void HideCharacterStats()
-    {
-        statsPanel.SetActive(false);
+        if (CombatManager.Instance != null)
+        {
+            CombatManager.Instance.ExecuteAction(character, skill); // Change UseSkill to ExecuteAction
+        }
+        else
+        {
+            Debug.LogError("CombatManager instance is missing!");
+        }
     }
 
-    // New method to display action feedback
+    public void HideCharacterStats()
+    {
+        if (statsPanel != null)
+        {
+            statsPanel.SetActive(false);
+        }
+    }
+
     public void DisplayActionFeedback(string message)
     {
-        // Implement a way to show feedback messages in the UI
-        Debug.Log(message); // For now, just log it
+        Debug.Log(message);
     }
 }

@@ -19,6 +19,7 @@ public class Character
 {
     public string name;
     public int health;
+    public int maxHealth;
     public int attack;
     public int defense;
     public int speed;
@@ -26,6 +27,8 @@ public class Character
     public Sprite characterSprite; // Unique sprite for each character
     public GameObject characterPrefab;
     public int index;
+    public bool isEnemy = false; // Domyślnie fałsz, ustawiamy na true dla przeciwników
+
 
     public bool IsAlive()
     {
@@ -63,5 +66,28 @@ public class Character
         {
             Debug.Log($"{name} missed the attack using {skill.name}!");
         }
+    }
+    public void TakeDamage(int damage)
+    {
+        damage = Mathf.Max(damage - defense, 0); // Zmniejszenie obrażeń o obronę, minimum 0
+        health -= damage;
+
+        Debug.Log($"{name} took {damage} damage! Remaining HP: {health}");
+
+        if (!IsAlive())
+        {
+            Debug.Log($"{name} has been defeated!");
+        }
+    }
+
+}
+[Serializable]
+public class Enemy : Character
+{
+    // Enemy-specific properties or overrides can be added here if necessary
+    // For now, it simply inherits from Character with isEnemy set to true
+    public Enemy()
+    {
+        isEnemy = true; // All instances of Enemy are considered enemies by default
     }
 }

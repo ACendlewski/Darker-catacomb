@@ -6,25 +6,49 @@ using UnityEngine.UI; // Added namespace for UI components
 
 public class TurnManager : MonoBehaviour
 {
+    public static TurnManager Instance { get; private set; } // Singleton
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            Instance = this;
+        }
+    }
     public TextMeshProUGUI turnNumberText;
     public TextMeshProUGUI turnOrderText; // UI element for displaying turn order
     public GameObject actionMenuPanel; // New panel for action buttons
     public GameObject actionButtonPrefab; // Prefab for action buttons
     public int numberOfEnemies = 4;
 
-    private List<Character> playerTeam = new List<Character>();
-    private List<Character> enemyTeam = new List<Character>();
-    private List<Character> allCharacters = new List<Character>();
+    protected List<Character> playerTeam = new List<Character>();
+    public List<Character> enemyTeam = new List<Character>();
+    protected List<Character> allCharacters = new List<Character>();
 
-    private List<Character> turnOrder = new List<Character>();
+    protected List<Character> turnOrder = new List<Character>();
     private int currentTurnIndex = 0;
     private int turnNumber = 1;
 
     public CharacterLoader characterLoader;
     public CharacterStatsUI characterStatsUI;
 
+    public CombatManager combatManager;
+
+
     void Start()
     {
+        if (combatManager == null)
+        {
+            combatManager = FindObjectOfType<CombatManager>();
+            if (combatManager == null)
+            {
+                Debug.LogError("CombatManager not found in the scene!");
+            }
+        }
         if (turnNumberText == null || turnOrderText == null || actionMenuPanel == null || actionButtonPrefab == null)
         {
             Debug.LogError("TurnNumberText, TurnOrderText, ActionMenuPanel, or ActionButtonPrefab is not assigned!");
@@ -73,19 +97,19 @@ public class TurnManager : MonoBehaviour
             availableEnemies.Remove(selected);
         }
 
-        Debug.Log("Available enemies after removing player team: " + availableEnemies.Count);
-
         while (enemyTeam.Count < numberOfEnemies && availableEnemies.Count > 0)
         {
             int randomIndex = Random.Range(0, availableEnemies.Count);
             Character selectedEnemy = availableEnemies[randomIndex];
-            enemyTeam.Add(selectedEnemy);
 
+            selectedEnemy.isEnemy = true; // Oznacz jako wroga
             selectedEnemy.name = "(Enemy) " + selectedEnemy.name;
 
+            enemyTeam.Add(selectedEnemy);
             availableEnemies.RemoveAt(randomIndex);
         }
     }
+
 
     void StartTurn()
     {
@@ -179,13 +203,16 @@ public class TurnManager : MonoBehaviour
 
     void OnActionButtonClicked(Character character, Skill skill)
     {
-        // Implement the logic for when an action button is clicked
-        // For example, find the target and call character.Attack(target, skill);
         Debug.Log($"{character.name} chose to use {skill.name}!");
-        // Hide the action menu after selecting an action
+
+        // Przekazanie do CombatManagera
+        combatManager.ExecuteAction(character, skill);
+
+        // Ukryj menu i zakończ turę
         HideActionMenu();
-        EndTurn(); // End the turn after the action
+        EndTurn();
     }
+
 
     void UpdateTurnOrderText()
     {
