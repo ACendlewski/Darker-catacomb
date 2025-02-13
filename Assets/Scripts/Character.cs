@@ -24,7 +24,7 @@ public class Character
     public int defense;
     public int speed;
     public List<Skill> skills = new List<Skill>();
-    public Sprite characterSprite; // Unique sprite for each character
+    public Sprite characterIconSprite; // Unique sprite for each character
     public GameObject characterPrefab;
     public int index;
     public bool isEnemy = false; // Domyślnie fałsz, ustawiamy na true dla przeciwników

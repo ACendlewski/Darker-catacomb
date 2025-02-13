@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI; // Added namespace for UI components
+using UnityEngine.EventSystems;
 
 public class TurnManager : MonoBehaviour
 {
@@ -23,9 +24,14 @@ public class TurnManager : MonoBehaviour
     public TextMeshProUGUI turnOrderText; // UI element for displaying turn order
     public GameObject actionMenuPanel; // New panel for action buttons
     public GameObject actionButtonPrefab; // Prefab for action buttons
+
+    public TextMeshProUGUI skillsText; // Text for displaying skill details
+    private Skill selectedSkill = null;
+
+
     public int numberOfEnemies = 4;
 
-    protected List<Character> playerTeam = new List<Character>();
+    public List<Character> playerTeam = new List<Character>();
     public List<Character> enemyTeam = new List<Character>();
     protected List<Character> allCharacters = new List<Character>();
 
@@ -37,7 +43,6 @@ public class TurnManager : MonoBehaviour
     public CharacterStatsUI characterStatsUI;
 
     public CombatManager combatManager;
-
 
     void Start()
     {
@@ -121,13 +126,53 @@ public class TurnManager : MonoBehaviour
             {
                 Debug.Log("It's " + currentCharacter.name + "'s turn!");
                 characterStatsUI.ShowCharacterStats(currentCharacter);
-                ShowActionMenu(currentCharacter); // Show action menu for the current character
+
+                if (currentCharacter.isEnemy)
+                {
+                    StartCoroutine(EnemyTurn(currentCharacter)); // Wróg atakuje automatycznie
+                }
+                else
+                {
+                    ShowActionMenu(currentCharacter); // Gracz wybiera atak ręcznie
+                }
             }
             else
             {
-                EndTurn(); // If the character is dead, immediately end the turn
+                EndTurn();
             }
         }
+    }
+
+    IEnumerator EnemyTurn(Character enemy)
+    {
+        yield return new WaitForSeconds(1.0f); // Krótkie opóźnienie dla naturalnego przebiegu walki
+
+        if (enemy.skills.Count > 0)
+        {
+            Skill randomSkill = enemy.skills[Random.Range(0, enemy.skills.Count)];
+            Character target = SelectRandomTarget(playerTeam); // Wybór losowego celu
+
+            if (target != null)
+            {
+                Debug.Log($"{enemy.name} używa {randomSkill.name} na {target.name}!");
+                combatManager.ExecuteAction(enemy, randomSkill);
+            }
+        }
+
+        yield return new WaitForSeconds(0.5f); // Krótkie opóźnienie przed zakończeniem tury
+        EndTurn();
+    }
+
+    Character SelectRandomTarget(List<Character> targets)
+    {
+        List<Character> aliveTargets = targets.FindAll(t => t.IsAlive());
+
+        if (aliveTargets.Count > 0)
+        {
+            return aliveTargets[Random.Range(0, aliveTargets.Count)];
+        }
+
+        return null;
     }
 
     public void EndTurn()
@@ -162,7 +207,28 @@ public class TurnManager : MonoBehaviour
         }
 
         actionMenuPanel.SetActive(true);
-        // Clear existing buttons
+
+        // **Sprawdzamy czy postać jest wrogiem i wyszarzamy panel**
+        CanvasGroup canvasGroup = actionMenuPanel.GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+        {
+            canvasGroup = actionMenuPanel.AddComponent<CanvasGroup>();
+        }
+
+        if (character.isEnemy)
+        {
+            canvasGroup.alpha = 0.5f;  // Zmniejszenie widoczności
+            canvasGroup.interactable = false; // Wyłączenie interakcji
+            canvasGroup.blocksRaycasts = false; // Blokowanie kliknięć
+        }
+        else
+        {
+            canvasGroup.alpha = 1f;
+            canvasGroup.interactable = true;
+            canvasGroup.blocksRaycasts = true;
+        }
+
+        // Usunięcie istniejących przycisków przed dodaniem nowych
         foreach (Transform child in actionMenuPanel.transform)
         {
             Destroy(child.gameObject);
@@ -170,49 +236,74 @@ public class TurnManager : MonoBehaviour
 
         foreach (Skill skill in character.skills)
         {
-            GameObject button = Instantiate(actionButtonPrefab, actionMenuPanel.transform);
-            if (button == null)
+            GameObject skillButton = Instantiate(actionButtonPrefab, actionMenuPanel.transform);
+            skillButton.name = skill.name;
+
+            Button button = skillButton.GetComponent<Button>();
+
+            TextMeshProUGUI buttonText = skillButton.GetComponentInChildren<TextMeshProUGUI>();
+            if (buttonText != null)
             {
-                Debug.LogError("Failed to instantiate action button prefab!");
-                continue;
+                buttonText.text = skill.name;
             }
 
-            TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
-            if (buttonText == null)
+            EventTrigger trigger = skillButton.GetComponent<EventTrigger>();
+            if (trigger == null)
             {
-                // Add the TextMeshProUGUI component programmatically
-                buttonText = button.AddComponent<TextMeshProUGUI>();
+                trigger = skillButton.AddComponent<EventTrigger>();
             }
+            trigger.triggers.Clear();
 
-            Button buttonComponent = button.GetComponent<Button>();
-            if (buttonComponent == null)
-            {
-                Debug.LogError("Button component is missing on the prefab!");
-                continue;
-            }
+            EventTrigger.Entry entryEnter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            entryEnter.callback.AddListener((data) => { ShowSkillDescription(skill); });
+            trigger.triggers.Add(entryEnter);
 
-            buttonText.text = skill.name;
-            buttonComponent.onClick.AddListener(() => OnActionButtonClicked(character, skill));
+            button.onClick.AddListener(() => OnActionButtonClicked(character, skill));
+
+            // **Dodatkowe wyłączenie przycisków, jeśli to wróg**
+            button.interactable = !character.isEnemy;
         }
     }
+
+
+    void ShowSkillDescription(Skill skill)
+    {
+        if (skillsText != null)
+        {
+            skillsText.text = $"DMG: {skill.damage - skill.damageModifier} - {skill.damageModifier + skill.damage}\n" +
+                              $"Hit: {skill.hitChance}%\n" +
+                              $"Crit: {skill.critChance}%\n";
+        }
+    }
+
+    void HideSkillDescription()
+    {
+        if (selectedSkill == null && skillsText != null)
+        {
+            skillsText.text = "";
+        }
+    }
+
+
+    void OnActionButtonClicked(Character character, Skill skill)
+    {
+        Debug.Log($"{character.name} używa skilla {skill.name}!");
+
+        selectedSkill = skill; // Zapamiętaj wybrany skill
+
+        // Przekazanie akcji do CombatManagera
+        combatManager.ExecuteAction(character, skill);
+
+        // Ukrycie menu i zakończenie tury
+        HideActionMenu();
+        EndTurn();
+    }
+
 
     void HideActionMenu()
     {
         actionMenuPanel.SetActive(false);
     }
-
-    void OnActionButtonClicked(Character character, Skill skill)
-    {
-        Debug.Log($"{character.name} chose to use {skill.name}!");
-
-        // Przekazanie do CombatManagera
-        combatManager.ExecuteAction(character, skill);
-
-        // Ukryj menu i zakończ turę
-        HideActionMenu();
-        EndTurn();
-    }
-
 
     void UpdateTurnOrderText()
     {

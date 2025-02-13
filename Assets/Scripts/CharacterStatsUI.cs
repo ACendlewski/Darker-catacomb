@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class CharacterStatsUI : MonoBehaviour
 {
@@ -10,33 +11,13 @@ public class CharacterStatsUI : MonoBehaviour
     public TextMeshProUGUI attackText;
     public TextMeshProUGUI defenseText;
     public TextMeshProUGUI speedText;
-    public TextMeshProUGUI skillsText;
 
     public GameObject statsPanel;
-    public GameObject skillButtonPrefab;
-    public Transform skillsContainer;
 
-    public Transform characterContainer;
-    public Vector3 characterSpacing = new Vector3(100f, 0f, 0f);
+    public Transform[] playerPositions; // Pozycje startowe dla drużyny gracza
+    public Transform[] enemyPositions;  // Pozycje startowe dla przeciwników
 
-    void Start()
-    {
-        if (CombatManager.Instance != null) { }
-        if (TurnManager.Instance != null) { }
-
-        if (characterContainer == null)
-        {
-            GameObject characterContainerObject = GameObject.Find("Characters");
-            if (characterContainerObject != null)
-            {
-                characterContainer = characterContainerObject.transform;
-            }
-            else
-            {
-                Debug.LogError("Character container not found in the scene!");
-            }
-        }
-    }
+    private Dictionary<string, GameObject> spawnedCharacters = new Dictionary<string, GameObject>(); // Przechowuje już stworzone postacie
 
     public void ShowCharacterStats(Character character)
     {
@@ -53,6 +34,18 @@ public class CharacterStatsUI : MonoBehaviour
         defenseText.text = "DEF: " + character.defense;
         speedText.text = "SPD: " + character.speed;
 
+        if (!spawnedCharacters.ContainsKey(character.name))
+        {
+            SpawnCharacter(character);
+        }
+        else
+        {
+            Debug.Log($"Character {character.name} already instantiated.");
+        }
+    }
+
+    private void SpawnCharacter(Character character)
+    {
         string prefabName = character.name.Replace("(Enemy) ", "").Trim();
         GameObject characterPrefab = Resources.Load<GameObject>("Prefabs/" + prefabName);
 
@@ -62,63 +55,43 @@ public class CharacterStatsUI : MonoBehaviour
             return;
         }
 
-        GameObject existingCharacter = characterContainer.Find(character.name)?.gameObject;
-        if (existingCharacter == null)
+        Transform spawnPoint = GetSpawnPoint(character);
+        if (spawnPoint == null)
         {
-            Debug.Log($"Instantiating character: {character.name}");
-            GameObject characterObject = Instantiate(characterPrefab, characterContainer);
-            characterObject.name = character.name;
-            characterObject.transform.localPosition = character.index * characterSpacing;
-        }
-
-        // Usuń poprzednie przyciski skilli
-        for (int i = skillsContainer.childCount - 1; i >= 0; i--)
-        {
-            Destroy(skillsContainer.GetChild(i).gameObject);
-        }
-
-        // Sprawdź, czy prefab przycisku jest przypisany
-        if (skillButtonPrefab == null)
-        {
-            Debug.LogError("Skill Button Prefab is not assigned!");
+            Debug.LogError("No spawn position available for " + character.name);
             return;
         }
 
-        // Wyświetl skille
-        if (character.skills != null && character.skills.Count > 0)
+        // Ustalamy rotację – wrogowie domyślnie stoją przodem (Quaternion.identity)
+        Quaternion rotation = character.isEnemy ? Quaternion.identity : Quaternion.Euler(0, 180, 0);
+
+        Debug.Log($"Instantiating character: {character.name}");
+        GameObject characterObject = Instantiate(characterPrefab, spawnPoint.position, rotation);
+        characterObject.name = character.name;
+
+        spawnedCharacters[character.name] = characterObject; // Dodajemy do słownika
+    }
+
+
+    private Transform GetSpawnPoint(Character character)
+    {
+        if (character.isEnemy)
         {
-            foreach (Skill skill in character.skills)
+            int index = TurnManager.Instance.enemyTeam.IndexOf(character);
+            if (index >= 0 && index < enemyPositions.Length)
             {
-                GameObject skillButton = Instantiate(skillButtonPrefab, skillsContainer);
-                skillButton.name = skill.name;
-
-                Button button = skillButton.GetComponent<Button>();
-                Image iconImage = skillButton.GetComponent<Image>();
-
-                if (iconImage != null)
-                {
-                    iconImage.sprite = skill.skillIcon;
-                }
-
-                button.onClick.AddListener(() => UseSkill(skill, character)); // Pass the character here
+                return enemyPositions[index];
             }
         }
         else
         {
-            skillsText.text = "Skills: None";
+            int index = TurnManager.Instance.playerTeam.IndexOf(character);
+            if (index >= 0 && index < playerPositions.Length)
+            {
+                return playerPositions[index];
+            }
         }
-    }
-
-    public void UseSkill(Skill skill, Character character)
-    {
-        if (CombatManager.Instance != null)
-        {
-            CombatManager.Instance.ExecuteAction(character, skill); // Change UseSkill to ExecuteAction
-        }
-        else
-        {
-            Debug.LogError("CombatManager instance is missing!");
-        }
+        return null;
     }
 
     public void HideCharacterStats()
