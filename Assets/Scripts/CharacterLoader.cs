@@ -76,6 +76,8 @@ public class CharacterLoader : MonoBehaviour
 
             Debug.Log($"Name: {character.name}");
         }
+        Debug.Log($"CharacterLoader has {characters.Count} characters and {enemies.Count} enemies.");
+
         Debug.Log("END");
     }
 

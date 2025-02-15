@@ -4,6 +4,8 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI; // Added namespace for UI components
 using UnityEngine.EventSystems;
+using System.Linq;
+
 
 public class TurnManager : MonoBehaviour
 {
@@ -34,6 +36,7 @@ public class TurnManager : MonoBehaviour
     public List<Character> playerTeam = new List<Character>();
     public List<Character> enemyTeam = new List<Character>();
     protected List<Character> allCharacters = new List<Character>();
+    public List<Character> allEnemies = new List<Character>();
 
     protected List<Character> turnOrder = new List<Character>();
     private int currentTurnIndex = 0;
@@ -60,12 +63,15 @@ public class TurnManager : MonoBehaviour
             return;
         }
         StartCoroutine(WaitForCharacterLoader());
+        Debug.Log("Waiting for character loader...");
     }
     IEnumerator WaitForCharacterLoader()
     {
         yield return new WaitUntil(() => characterLoader.characters != null && characterLoader.characters.Count > 0);
 
         allCharacters = characterLoader.characters;
+        allEnemies = characterLoader.enemies.Cast<Character>().ToList();
+
         Debug.Log("All characters:");
         foreach (Character character in allCharacters)
         {
@@ -83,37 +89,31 @@ public class TurnManager : MonoBehaviour
 
         turnOrder.AddRange(playerTeam);
         turnOrder.AddRange(enemyTeam);
-
         turnOrder.Sort((a, b) => b.speed.CompareTo(a.speed));
 
-        LogTeams();
-        UpdateTurnOrderText(); // Update the turn order display
+        characterStatsUI.SpawnAllCharacters(playerTeam, enemyTeam); // ✅ Spawn na start
 
+        LogTeams();
+        UpdateTurnOrderText();
         UpdateTurnNumberText();
         StartTurn();
     }
 
+
     void SelectRandomEnemies()
     {
-        List<Character> availableEnemies = new List<Character>(allCharacters);
-
-        foreach (Character selected in playerTeam)
-        {
-            availableEnemies.Remove(selected);
-        }
+        List<Character> availableEnemies = new List<Character>(allEnemies); // ✅ Wybieramy tylko z wrogów
 
         while (enemyTeam.Count < numberOfEnemies && availableEnemies.Count > 0)
         {
             int randomIndex = Random.Range(0, availableEnemies.Count);
             Character selectedEnemy = availableEnemies[randomIndex];
 
-            selectedEnemy.isEnemy = true; // Oznacz jako wroga
-            selectedEnemy.name = "(Enemy) " + selectedEnemy.name;
-
             enemyTeam.Add(selectedEnemy);
             availableEnemies.RemoveAt(randomIndex);
         }
     }
+
 
 
     void StartTurn()
@@ -126,6 +126,8 @@ public class TurnManager : MonoBehaviour
             {
                 Debug.Log("It's " + currentCharacter.name + "'s turn!");
                 characterStatsUI.ShowCharacterStats(currentCharacter);
+
+                currentCharacter.PlayAnimation("idle"); // Postać przechodzi do idle
 
                 if (currentCharacter.isEnemy)
                 {
@@ -142,6 +144,7 @@ public class TurnManager : MonoBehaviour
             }
         }
     }
+
 
     IEnumerator EnemyTurn(Character enemy)
     {
@@ -177,6 +180,12 @@ public class TurnManager : MonoBehaviour
 
     public void EndTurn()
     {
+        if (IsGameOver())
+        {
+            ShowGameOverScreen();
+            return;
+        }
+
         currentTurnIndex++;
 
         if (currentTurnIndex >= turnOrder.Count)
@@ -185,12 +194,43 @@ public class TurnManager : MonoBehaviour
             turnNumber++;
             UpdateTurnNumberText();
         }
-        characterStatsUI.HideCharacterStats();
-        HideActionMenu(); // Hide action menu when the turn ends
 
-        UpdateTurnOrderText(); // Update the turn order display
+        characterStatsUI.HideCharacterStats();
+        HideActionMenu();
+
+        UpdateTurnOrderText();
         StartTurn();
     }
+    private bool IsGameOver()
+    {
+        bool allPlayersDead = playerTeam.TrueForAll(character => !character.IsAlive());
+        bool allEnemiesDead = enemyTeam.TrueForAll(character => !character.IsAlive());
+
+        return allPlayersDead || allEnemiesDead;
+    }
+    private void ShowGameOverScreen()
+    {
+        string winner = playerTeam.Exists(character => character.IsAlive()) ? "Gracze wygrali!" : "Wrogowie wygrali!";
+        Debug.Log("KONIEC GRY: " + winner);
+
+        turnNumberText.text = "KONIEC GRY";
+        turnOrderText.text = winner;
+
+        foreach (Character character in playerTeam.Concat(enemyTeam))
+        {
+            if (character.IsAlive())
+            {
+                character.PlayAnimation("victory");
+            }
+        }
+
+        StopAllCoroutines();
+        enabled = false;
+    }
+
+
+
+
 
     void ShowActionMenu(Character character)
     {

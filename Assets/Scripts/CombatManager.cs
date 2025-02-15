@@ -19,6 +19,7 @@ public class CombatManager : MonoBehaviour
             DontDestroyOnLoad(gameObject);
         }
     }
+
     public void ExecuteAction(Character attacker, Skill skill)
     {
         Debug.Log($"{attacker.name} is using {skill.name}!");
@@ -30,11 +31,24 @@ public class CombatManager : MonoBehaviour
             return;
         }
 
+        StartCoroutine(PerformAttack(attacker, skill, target));
+    }
+
+    private IEnumerator PerformAttack(Character attacker, Skill skill, Character target)
+    {
+        // Odtwarzanie animacji ataku
+        if (attacker.animator != null)
+        {
+            attacker.animator.Play("attack");
+        }
+
+        yield return new WaitForSeconds(0.5f); // Czekanie na część animacji ataku
+
         // Obliczanie trafienia
         if (UnityEngine.Random.Range(0, 100) > skill.hitChance)
         {
             Debug.Log($"{attacker.name} missed {skill.name} on {target.name}!");
-            return;
+            yield break;
         }
 
         // Obliczanie obrażeń
@@ -49,8 +63,31 @@ public class CombatManager : MonoBehaviour
             Debug.Log($"{attacker.name} dealt a critical hit!");
         }
 
+        // Odtwarzanie animacji otrzymania obrażeń
+        if (target.animator != null)
+        {
+            target.animator.Play("hurt");
+        }
+
+        yield return new WaitForSeconds(0.3f); // Czekanie na efekt animacji obrażeń
+
         // Zastosowanie obrażeń
         target.TakeDamage(damage);
+
+        // Jeśli postać umiera, odtwarzamy animację śmierci
+        if (!target.IsAlive())
+        {
+            if (target.animator != null)
+            {
+                target.animator.Play("die");
+            }
+            Debug.Log($"{target.name} has died!");
+        }
+
+        yield return new WaitForSeconds(0.5f); // Czekanie na zakończenie animacji
+
+        // Przekazanie tury
+        TurnManager.Instance.EndTurn();
     }
 
     Character FindTarget(Character attacker)
@@ -63,5 +100,4 @@ public class CombatManager : MonoBehaviour
         }
         return null;
     }
-
 }

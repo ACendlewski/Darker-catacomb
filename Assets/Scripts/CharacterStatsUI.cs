@@ -47,11 +47,13 @@ public class CharacterStatsUI : MonoBehaviour
     private void SpawnCharacter(Character character)
     {
         string prefabName = character.name.Replace("(Enemy) ", "").Trim();
-        GameObject characterPrefab = Resources.Load<GameObject>("Prefabs/" + prefabName);
+        string path = character.isEnemy ? "Prefabs/Enemies/" + prefabName : "Prefabs/" + prefabName;
+
+        GameObject characterPrefab = Resources.Load<GameObject>(path);
 
         if (characterPrefab == null)
         {
-            Debug.LogError("Character prefab not found: " + prefabName);
+            Debug.LogError("Character prefab not found at: " + path);
             return;
         }
 
@@ -62,14 +64,28 @@ public class CharacterStatsUI : MonoBehaviour
             return;
         }
 
-        // Ustalamy rotację – wrogowie domyślnie stoją przodem (Quaternion.identity)
         Quaternion rotation = character.isEnemy ? Quaternion.identity : Quaternion.Euler(0, 180, 0);
 
-        Debug.Log($"Instantiating character: {character.name}");
+        Debug.Log($"Instantiating character: {character.name} from path {path}");
         GameObject characterObject = Instantiate(characterPrefab, spawnPoint.position, rotation);
         characterObject.name = character.name;
 
-        spawnedCharacters[character.name] = characterObject; // Dodajemy do słownika
+        spawnedCharacters[character.name] = characterObject;
+    }
+
+    public void SpawnAllCharacters(List<Character> playerTeam, List<Character> enemyTeam)
+    {
+        // Spawn postaci gracza
+        for (int i = 0; i < playerTeam.Count; i++)
+        {
+            SpawnCharacter(playerTeam[i]);
+        }
+
+        // Spawn przeciwników
+        for (int i = 0; i < enemyTeam.Count; i++)
+        {
+            SpawnCharacter(enemyTeam[i]);
+        }
     }
 
 

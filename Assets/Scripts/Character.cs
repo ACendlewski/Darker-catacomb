@@ -26,9 +26,9 @@ public class Character
     public List<Skill> skills = new List<Skill>();
     public Sprite characterIconSprite; // Unique sprite for each character
     public GameObject characterPrefab;
+    public Animator animator;
     public int index;
     public bool isEnemy = false; // Domyślnie fałsz, ustawiamy na true dla przeciwników
-
 
     public bool IsAlive()
     {
@@ -77,6 +77,14 @@ public class Character
         if (!IsAlive())
         {
             Debug.Log($"{name} has been defeated!");
+        }
+    }
+
+    public void PlayAnimation(string animationName)
+    {
+        if (animator != null)
+        {
+            animator.Play(animationName);
         }
     }
 
