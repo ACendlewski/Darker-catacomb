@@ -102,7 +102,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8181164275840462983, guid: f8b08838e850f1f4bbe794f166f678eb, type: 3}
       propertyPath: m_Name
-      value: Hero
+      value: Mage
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

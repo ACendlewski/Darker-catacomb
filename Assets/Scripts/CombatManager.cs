@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static AnimationConstants;
+
 
 public class CombatManager : MonoBehaviour
 {
@@ -36,11 +38,9 @@ public class CombatManager : MonoBehaviour
 
     private IEnumerator PerformAttack(Character attacker, Skill skill, Character target)
     {
-        // Odtwarzanie animacji ataku
-        if (attacker.animator != null)
-        {
-            attacker.animator.Play("attack");
-        }
+        // Play attack animation
+        attacker.PlayAnimation(Attack);
+
 
         yield return new WaitForSeconds(0.5f); // Czekanie na część animacji ataku
 
@@ -63,11 +63,9 @@ public class CombatManager : MonoBehaviour
             Debug.Log($"{attacker.name} dealt a critical hit!");
         }
 
-        // Odtwarzanie animacji otrzymania obrażeń
-        if (target.animator != null)
-        {
-            target.animator.Play("hurt");
-        }
+        // Play hurt animation
+        target.PlayAnimation(Hurt);
+
 
         yield return new WaitForSeconds(0.3f); // Czekanie na efekt animacji obrażeń
 
@@ -77,14 +75,15 @@ public class CombatManager : MonoBehaviour
         // Jeśli postać umiera, odtwarzamy animację śmierci
         if (!target.IsAlive())
         {
-            if (target.animator != null)
-            {
-                target.animator.Play("die");
-            }
+            target.PlayAnimation(Die);
+
             Debug.Log($"{target.name} has died!");
         }
 
-        yield return new WaitForSeconds(0.5f); // Czekanie na zakończenie animacji
+        // Return to idle animation after action
+        attacker.PlayAnimation(Idle);
+        yield return new WaitForSeconds(0.5f); // Wait for animations to finish
+
 
         // Przekazanie tury
         TurnManager.Instance.EndTurn();

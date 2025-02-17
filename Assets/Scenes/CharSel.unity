@@ -2975,6 +2975,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characters: []
+  enemies: []
 --- !u!1 &1386515735
 GameObject:
   m_ObjectHideFlags: 0

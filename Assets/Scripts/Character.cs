@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using static UnityEngine.RuleTile.TilingRuleOutput;
+using static AnimationConstants;
+
 
 [Serializable]
 public class Skill
@@ -27,6 +29,7 @@ public class Character
     public Sprite characterIconSprite; // Unique sprite for each character
     public GameObject characterPrefab;
     public Animator animator;
+
     public int index;
     public bool isEnemy = false; // Domyślnie fałsz, ustawiamy na true dla przeciwników
 
@@ -37,7 +40,9 @@ public class Character
 
     public void Attack(Character target, Skill skill)
     {
+        PlayAnimation(AnimationConstants.Attack);
         if (UnityEngine.Random.Range(0, 100) <= skill.hitChance)
+
         {
             bool isCrit = UnityEngine.Random.Range(0, 100) <= skill.critChance;
             int damage = skill.damage;
@@ -69,8 +74,10 @@ public class Character
     }
     public void TakeDamage(int damage)
     {
+        PlayAnimation(AnimationConstants.Hurt);
         damage = Mathf.Max(damage - defense, 0); // Zmniejszenie obrażeń o obronę, minimum 0
         health -= damage;
+
 
         Debug.Log($"{name} took {damage} damage! Remaining HP: {health}");
 
@@ -82,11 +89,19 @@ public class Character
 
     public void PlayAnimation(string animationName)
     {
-        if (animator != null)
+        if (animator != null && !string.IsNullOrEmpty(animationName))
         {
-            animator.Play(animationName);
+            if (animator.HasState(0, Animator.StringToHash(animationName)))
+            {
+                animator.Play(animationName);
+            }
+            else
+            {
+                Debug.LogWarning($"Animation {animationName} not found for {name}");
+            }
         }
     }
+
 
 }
 [Serializable]

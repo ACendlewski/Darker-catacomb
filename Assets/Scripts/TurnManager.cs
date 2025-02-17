@@ -4,6 +4,8 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI; // Added namespace for UI components
 using UnityEngine.EventSystems;
+using static AnimationConstants;
+
 using System.Linq;
 
 
@@ -127,7 +129,8 @@ public class TurnManager : MonoBehaviour
                 Debug.Log("It's " + currentCharacter.name + "'s turn!");
                 characterStatsUI.ShowCharacterStats(currentCharacter);
 
-                currentCharacter.PlayAnimation("idle"); // Postać przechodzi do idle
+                currentCharacter.PlayAnimation(Idle); // Postać przechodzi do idle
+
 
                 if (currentCharacter.isEnemy)
                 {
@@ -213,14 +216,14 @@ public class TurnManager : MonoBehaviour
         string winner = playerTeam.Exists(character => character.IsAlive()) ? "Gracze wygrali!" : "Wrogowie wygrali!";
         Debug.Log("KONIEC GRY: " + winner);
 
-        turnNumberText.text = "KONIEC GRY";
-        turnOrderText.text = winner;
+        turnNumberText.text = $"{turnNumberText.text} KONIEC GRY";
 
         foreach (Character character in playerTeam.Concat(enemyTeam))
         {
             if (character.IsAlive())
             {
-                character.PlayAnimation("victory");
+                character.PlayAnimation(Victory);
+
             }
         }
 
@@ -332,12 +335,20 @@ public class TurnManager : MonoBehaviour
         selectedSkill = skill; // Zapamiętaj wybrany skill
 
         // Przekazanie akcji do CombatManagera
-        combatManager.ExecuteAction(character, skill);
-
-        // Ukrycie menu i zakończenie tury
-        HideActionMenu();
-        EndTurn();
+        StartCoroutine(PerformPlayerAction(character, skill));
     }
+
+    IEnumerator PerformPlayerAction(Character character, Skill skill)
+    {
+        HideActionMenu(); // Schowaj menu po wyborze skilla
+
+        combatManager.ExecuteAction(character, skill); // Wykonaj atak
+
+        yield return new WaitForSeconds(1.5f); // Czekaj na animację ataku (możesz dostosować)
+
+        EndTurn(); // Dopiero teraz kończ turę
+    }
+
 
 
     void HideActionMenu()
@@ -350,7 +361,15 @@ public class TurnManager : MonoBehaviour
         string turnOrderDisplay = "Turn Order:\n";
         foreach (Character character in turnOrder)
         {
-            turnOrderDisplay += $"SPD: {character.speed} {character.name} (HP: {character.health})\n";
+            turnOrderDisplay += $"SPD: {character.speed}";
+
+            if (character.isEnemy)
+            {
+                turnOrderDisplay += " (Enemy)";
+            }
+
+            turnOrderDisplay += $" {character.name}";
+            turnOrderDisplay += $" HP: {character.health}\n";
         }
         turnOrderText.text = turnOrderDisplay; // Update the UI text
     }
