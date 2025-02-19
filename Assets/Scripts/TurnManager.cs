@@ -5,9 +5,7 @@ using TMPro;
 using UnityEngine.UI; // Added namespace for UI components
 using UnityEngine.EventSystems;
 using static AnimationConstants;
-
 using System.Linq;
-
 
 public class TurnManager : MonoBehaviour
 {
@@ -31,7 +29,7 @@ public class TurnManager : MonoBehaviour
 
     public TextMeshProUGUI skillsText; // Text for displaying skill details
     private Skill selectedSkill = null;
-
+    private Character selectedEnemy = null;
 
     public int numberOfEnemies = 4;
 
@@ -101,7 +99,6 @@ public class TurnManager : MonoBehaviour
         StartTurn();
     }
 
-
     void SelectRandomEnemies()
     {
         List<Character> availableEnemies = new List<Character>(allEnemies); // ✅ Wybieramy tylko z wrogów
@@ -116,8 +113,6 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-
-
     void StartTurn()
     {
         if (turnOrder.Count > 0 && currentTurnIndex < turnOrder.Count)
@@ -130,7 +125,6 @@ public class TurnManager : MonoBehaviour
                 characterStatsUI.ShowCharacterStats(currentCharacter);
 
                 currentCharacter.PlayAnimation(Idle); // Postać przechodzi do idle
-
 
                 if (currentCharacter.isEnemy)
                 {
@@ -147,7 +141,6 @@ public class TurnManager : MonoBehaviour
             }
         }
     }
-
 
     IEnumerator EnemyTurn(Character enemy)
     {
@@ -204,6 +197,7 @@ public class TurnManager : MonoBehaviour
         UpdateTurnOrderText();
         StartTurn();
     }
+
     private bool IsGameOver()
     {
         bool allPlayersDead = playerTeam.TrueForAll(character => !character.IsAlive());
@@ -211,6 +205,7 @@ public class TurnManager : MonoBehaviour
 
         return allPlayersDead || allEnemiesDead;
     }
+
     private void ShowGameOverScreen()
     {
         string winner = playerTeam.Exists(character => character.IsAlive()) ? "Gracze wygrali!" : "Wrogowie wygrali!";
@@ -223,16 +218,12 @@ public class TurnManager : MonoBehaviour
             if (character.IsAlive())
             {
                 character.PlayAnimation(Victory);
-
             }
         }
 
         StopAllCoroutines();
         enabled = false;
     }
-
-
-
 
 
     void ShowActionMenu(Character character)
@@ -242,6 +233,9 @@ public class TurnManager : MonoBehaviour
             Debug.LogError("ActionMenuPanel or ActionButtonPrefab is not assigned!");
             return;
         }
+
+        // Reset selected enemy at start of turn
+        selectedEnemy = null;
 
         if (character.skills == null || character.skills.Count == 0)
         {
@@ -303,11 +297,11 @@ public class TurnManager : MonoBehaviour
 
             button.onClick.AddListener(() => OnActionButtonClicked(character, skill));
 
-            // **Dodatkowe wyłączenie przycisków, jeśli to wróg**
+            // Enable buttons for player characters
             button.interactable = !character.isEnemy;
+
         }
     }
-
 
     void ShowSkillDescription(Skill skill)
     {
@@ -327,29 +321,82 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-
     void OnActionButtonClicked(Character character, Skill skill)
     {
-        Debug.Log($"{character.name} używa skilla {skill.name}!");
+        if (selectedEnemy == null)
+        {
+            Debug.Log("Please select an enemy first!");
+            return;
+        }
 
-        selectedSkill = skill; // Zapamiętaj wybrany skill
+        Debug.Log($"{character.name} uses {skill.name} on {selectedEnemy.name}!");
 
-        // Przekazanie akcji do CombatManagera
-        StartCoroutine(PerformPlayerAction(character, skill));
+        selectedSkill = skill;
+
+        // Pass selected enemy to CombatManager
+        StartCoroutine(PerformPlayerAction(character, skill, selectedEnemy));
     }
 
-    IEnumerator PerformPlayerAction(Character character, Skill skill)
+    public void SelectEnemy(Character enemy)
     {
-        HideActionMenu(); // Schowaj menu po wyborze skilla
+        if (enemy == null || !enemy.IsAlive())
+        {
+            Debug.LogWarning("Selected enemy is null or dead.");
+            return;
+        }
 
-        combatManager.ExecuteAction(character, skill); // Wykonaj atak
+        selectedEnemy = enemy;
+        Debug.Log($"Selected enemy: {enemy.name}");
 
-        yield return new WaitForSeconds(1.5f); // Czekaj na animację ataku (możesz dostosować)
+        // Aktualizacja UI
+        if (skillsText != null)
+        {
+            skillsText.text = $"Selected: {enemy.name}\nHP: {enemy.health}";
+        }
 
-        EndTurn(); // Dopiero teraz kończ turę
+        // Enable skill buttons now that an enemy is selected
+        UpdateSkillButtonsState();
+    }
+
+    public void AssignEnemySelectionTriggers(GameObject enemyObject)
+    {
+        Button enemyButton = enemyObject.GetComponent<Button>();
+        if (enemyButton == null)
+        {
+            enemyButton = enemyObject.AddComponent<Button>();
+        }
+        enemyButton.onClick.AddListener(() => SelectEnemy(enemyObject.GetComponent<Character>()));
+
     }
 
 
+    void UpdateSkillButtonsState()
+    {
+        if (actionMenuPanel != null)
+        {
+            foreach (Transform child in actionMenuPanel.transform)
+            {
+                Button button = child.GetComponent<Button>();
+                if (button != null)
+                {
+                    // Enable buttons for player characters
+                    button.interactable = !turnOrder[currentTurnIndex].isEnemy;
+
+                }
+            }
+        }
+    }
+
+    IEnumerator PerformPlayerAction(Character character, Skill skill, Character target)
+    {
+        HideActionMenu();
+
+        combatManager.ExecuteAction(character, skill, target);
+
+        yield return new WaitForSeconds(1.5f);
+
+        EndTurn();
+    }
 
     void HideActionMenu()
     {
@@ -424,5 +471,4 @@ public class TurnManager : MonoBehaviour
             characterPrefab = null
         });
     }
-
 }

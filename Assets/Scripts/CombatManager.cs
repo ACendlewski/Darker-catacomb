@@ -22,19 +22,24 @@ public class CombatManager : MonoBehaviour
         }
     }
 
-    public void ExecuteAction(Character attacker, Skill skill)
+    public void ExecuteAction(Character attacker, Skill skill, Character target = null)
     {
         Debug.Log($"{attacker.name} is using {skill.name}!");
 
-        Character target = FindTarget(attacker);
+        // Use provided target if available, otherwise find one
         if (target == null)
         {
-            Debug.Log("No valid target found.");
-            return;
+            target = FindTarget(attacker);
+            if (target == null)
+            {
+                Debug.Log("No valid target found.");
+                return;
+            }
         }
 
         StartCoroutine(PerformAttack(attacker, skill, target));
     }
+
 
     private IEnumerator PerformAttack(Character attacker, Skill skill, Character target)
     {
@@ -91,12 +96,16 @@ public class CombatManager : MonoBehaviour
 
     Character FindTarget(Character attacker)
     {
-        List<Character> potentialTargets = attacker.isEnemy ? CharacterManager.Instance.selectedCharacters : TurnManager.Instance.enemyTeam;
+        List<Character> potentialTargets = attacker.isEnemy ? 
+            CharacterManager.Instance.selectedCharacters : 
+            TurnManager.Instance.enemyTeam;
 
+        // Return first alive target if no specific target is selected
         foreach (Character target in potentialTargets)
         {
             if (target.IsAlive()) return target;
         }
         return null;
     }
+
 }
