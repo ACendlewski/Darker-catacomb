@@ -110,7 +110,14 @@ public class Character
             Debug.Log($"{name} has been defeated!");
         }
     }
+
+    public Character Clone()
+    {
+        return (Character)this.MemberwiseClone();
+    }
+
 }
+
 
 [Serializable]
 public class Enemy : Character

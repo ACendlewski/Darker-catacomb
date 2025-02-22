@@ -5,8 +5,8 @@ public class CharacterManager : MonoBehaviour
 {
     public static CharacterManager Instance { get; private set; }
 
-public List<Character> selectedCharacters = new List<Character>();
-public Dictionary<Character, int> characterCounts = new Dictionary<Character, int>();
+    public List<Character> selectedCharacters = new List<Character>();
+    public Dictionary<Character, int> characterCounts = new Dictionary<Character, int>();
 
 
     private void Awake()
@@ -14,7 +14,7 @@ public Dictionary<Character, int> characterCounts = new Dictionary<Character, in
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); 
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -24,6 +24,9 @@ public Dictionary<Character, int> characterCounts = new Dictionary<Character, in
 
     public void AddCharacter(Character character)
     {
+        Character newCharacter = character.Clone(); // Tworzymy nową instancję
+        selectedCharacters.Add(newCharacter);
+
         if (characterCounts.ContainsKey(character))
         {
             characterCounts[character]++;
@@ -32,8 +35,6 @@ public Dictionary<Character, int> characterCounts = new Dictionary<Character, in
         {
             characterCounts[character] = 1;
         }
-
-    
-        selectedCharacters.Add(character);
     }
+
 }
