@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Collections;
+using System.Linq;
 
 public class CharacterStatsUI : MonoBehaviour
 {
@@ -33,7 +34,7 @@ public class CharacterStatsUI : MonoBehaviour
         if (statsPanel == null || character == null) return;
         statsPanel.SetActive(true);
 
-        characterNameText.text = character.name;
+        characterNameText.text = !character.isEnemy ? character.name : "(Enemy) " + character.name;
         healthSlider.maxValue = character.maxHealth;
         healthSlider.value = character.health;
         healthText.text = $"{character.health} / {character.maxHealth}";
@@ -77,31 +78,83 @@ public class CharacterStatsUI : MonoBehaviour
         GameObject characterObject = Instantiate(characterPrefab, spawnPoint.position, rotation);
         characterObject.name = character.name;
 
-        // Add health bar
+        // Add health bar for both players and enemies
         if (healthBarPrefab != null)
         {
-            GameObject healthBarObject = Instantiate(healthBarPrefab, characterObject.transform);
-            healthBarObject.SetActive(false);
+            GameObject healthBarObject = Instantiate(healthBarPrefab);
 
+            // Set up canvas components
             Canvas canvas = healthBarObject.GetComponent<Canvas>();
             if (canvas == null)
             {
                 canvas = healthBarObject.AddComponent<Canvas>();
-                canvas.renderMode = RenderMode.WorldSpace;
-                CanvasScaler scaler = healthBarObject.AddComponent<CanvasScaler>();
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1920, 1080);
             }
+            canvas.renderMode = RenderMode.WorldSpace;
 
-            healthBarObject.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
-            healthBarObject.transform.localPosition = new Vector3(0f, 2f, 0f);
-            healthBarObject.SetActive(true);
-
-            HealthBar healthBar = healthBarObject.GetComponent<HealthBar>();
-            if (healthBar != null)
+            // Add CanvasScaler if not present
+            CanvasScaler scaler = healthBarObject.GetComponent<CanvasScaler>();
+            if (scaler == null)
             {
-                StartCoroutine(DelayedHealthUpdate(healthBar, character.maxHealth, character.health));
+                scaler = healthBarObject.AddComponent<CanvasScaler>();
             }
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+
+            // Set parent and position
+            healthBarObject.transform.SetParent(characterObject.transform);
+            // Adjust position based on character type
+            float yOffset = character.isEnemy ? 1.8f : 2f;
+            healthBarObject.transform.localPosition = new Vector3(0f, yOffset, 0f);
+            healthBarObject.transform.localScale = Vector3.one * 0.01f;
+
+            // Add HealthBar component if missing
+            HealthBar healthBar = healthBarObject.GetComponent<HealthBar>();
+            if (healthBar == null)
+            {
+                healthBar = healthBarObject.AddComponent<HealthBar>();
+            }
+
+            // Add Slider component if missing
+            Slider slider = healthBarObject.GetComponentInChildren<Slider>();
+            if (slider == null)
+            {
+                Debug.LogError("Slider component not found in health bar prefab");
+                return;
+            }
+
+            // Initialize health bar
+            healthBar.slider = slider;
+            healthBar.SetMaxHealth(character.maxHealth);
+            healthBar.UpdateHealth(character.health);
+
+            // Register health change callback with debug logging
+            character.OnHealthChanged += (newHealth) =>
+            {
+                healthBar.UpdateHealth(newHealth);
+                if (character.isEnemy)
+                {
+                    Debug.Log($"Enemy {character.name} health updated to {newHealth}");
+                }
+                else
+                {
+                    Debug.Log($"Player {character.name} health updated to {newHealth}");
+                }
+            };
+
+            // Debug log for health bar creation
+            if (character.isEnemy)
+            {
+                Debug.Log($"Created health bar for enemy: {character.name} with {character.health}/{character.maxHealth} HP");
+            }
+
+            // Force immediate update
+            Canvas.ForceUpdateCanvases();
+
+            healthBarObject.SetActive(true);
+        }
+        else
+        {
+            Debug.LogError("Health bar prefab is not assigned");
         }
 
         // Add button click handler for enemies
@@ -115,21 +168,11 @@ public class CharacterStatsUI : MonoBehaviour
 
             enemyButton.onClick.AddListener(() =>
             {
-                TurnManager.Instance.SelectEnemy(character);
+                TurnManager.Instance.SelectTarget(character, false);
             });
         }
 
         spawnedCharacters[character.name] = characterObject;
-    }
-
-    private IEnumerator DelayedHealthUpdate(HealthBar healthBar, int maxHealth, int currentHealth)
-    {
-        yield return new WaitForEndOfFrame();
-        if (healthBar != null)
-        {
-            healthBar.SetMaxHealth(maxHealth);
-            healthBar.UpdateHealth(currentHealth);
-        }
     }
 
     public void SpawnAllCharacters(List<Character> playerTeam, List<Character> enemyTeam)
@@ -181,21 +224,13 @@ public class CharacterStatsUI : MonoBehaviour
             {
                 SpawnCharacter(enemyTeam[i]);
                 ShowCharacterStats(enemyTeam[i]);
-                TurnManager.Instance.AssignEnemySelectionTriggers(spawnedCharacters[enemyTeam[i].name]);
-
-
+                TurnManager.Instance.AssignTargetSelectionTriggers(spawnedCharacters[enemyTeam[i].name], false);
             }
             else
             {
                 Debug.LogWarning($"Not enough enemy positions for character {enemyTeam[i].name}");
             }
         }
-        foreach (Character enemy in enemyTeam)
-        {
-            TurnManager.Instance.AssignEnemySelectionTriggers(spawnedCharacters[enemy.name]);
-        }
-
-        Debug.Log("Finished SpawnAllCharacters");
     }
 
     private Transform GetSpawnPoint(Character character)
@@ -233,7 +268,7 @@ public class CharacterStatsUI : MonoBehaviour
         foreach (Character enemy in TurnManager.Instance.enemyTeam)
         {
             GameObject buttonObject = Instantiate(enemyButtonPrefab, enemySelectionPanel.transform);
-            buttonObject.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f); // Skalowanie przycisków
+            buttonObject.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
 
             TextMeshProUGUI buttonText = buttonObject.GetComponentInChildren<TextMeshProUGUI>();
             if (buttonText != null)
@@ -245,13 +280,12 @@ public class CharacterStatsUI : MonoBehaviour
             if (button != null)
             {
                 Character selectedEnemy = enemy;
-                button.onClick.AddListener(() => TurnManager.Instance.SelectEnemy(selectedEnemy));
+                button.onClick.AddListener(() => TurnManager.Instance.SelectTarget(selectedEnemy, false));
             }
         }
 
         LayoutRebuilder.ForceRebuildLayoutImmediate(enemySelectionPanel.GetComponent<RectTransform>());
     }
-
 
     public void HideCharacterStats()
     {
@@ -269,4 +303,19 @@ public class CharacterStatsUI : MonoBehaviour
     {
         Debug.Log(message);
     }
+
+    public List<GameObject> GetCharacterUIs()
+    {
+        return spawnedCharacters.Values.ToList();
+    }
+
+    public GameObject GetCharacterUI(string characterName)
+    {
+        if (spawnedCharacters.ContainsKey(characterName))
+        {
+            return spawnedCharacters[characterName];
+        }
+        return null;
+    }
+
 }

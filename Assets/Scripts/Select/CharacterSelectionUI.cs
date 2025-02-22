@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using System.Collections;
 using TMPro;
@@ -159,6 +158,8 @@ public class CharacterSelectionUI : MonoBehaviour
 
         // Dodanie nowej instancji do listy
         activeCharacterPreviews.Add(new KeyValuePair<Character, GameObject>(character, characterObject));
+        CharacterManager.Instance.characterCounts[character]++;
+        // Removed recursive call to UpdateCharacterPreview
     }
 
     void UpdateSelectedCharacterButtons()
@@ -213,32 +214,37 @@ public class CharacterSelectionUI : MonoBehaviour
         }
     }
 
-
-
     public void ShowCharacterStats(Character character)
     {
-        characterStatsPanel.SetActive(true);
-        characterNameText.text = "Name: " + character.name;
-        healthText.text = "Health: " + character.health;
-        attackText.text = "Attack: " + character.attack;
-        defenseText.text = "Defense: " + character.defense;
-        speedText.text = "Speed: " + character.speed;
-
-        if (character.skills != null && character.skills.Count > 0)
+        if (character == null)
         {
-            skillsText.text = "Skills:\n";
-            foreach (Skill skill in character.skills)
+            Debug.LogError("Character is null!");
+            return;
+        }
+
+        {
+            characterStatsPanel.SetActive(true);
+            characterNameText.text = "Name: " + character.name;
+            healthText.text = "Health: " + character.health;
+            attackText.text = "Attack: " + character.attack;
+            defenseText.text = "Defense: " + character.defense;
+            speedText.text = "Speed: " + character.speed;
+
+            if (character.skills != null && character.skills.Count > 0)
             {
-                skillsText.text += $"- {skill.name} (Dmg: {skill.damage}, Hit: {skill.hitChance}%, Crit: {skill.critChance}%, Mod: ±{skill.damageModifier}%)\n";
+                skillsText.text = "Skills:\n";
+                foreach (Skill skill in character.skills)
+                {
+                    skillsText.text += $"- {skill.name} (Dmg: {skill.damage}, Hit: {skill.hitChance}%, Crit: {skill.critChance}%, Mod: ±{skill.damageModifier}%)\n";
+                }
             }
-        }
-        else
-        {
-            skillsText.text = "Skills: None";
-        }
+            else
+            {
+                skillsText.text = "Skills: None";
+            }
 
+        }
     }
-
     public void HideCharacterStats()
     {
         characterStatsPanel.SetActive(false);

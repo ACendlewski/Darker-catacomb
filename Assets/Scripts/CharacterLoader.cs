@@ -12,11 +12,20 @@ public class CharacterLoader : MonoBehaviour
     void Start()
     {
         LoadCharacters();
-        LoadEnemies();
         foreach (Character character in characters)
         {
             character.maxHealth = character.health;
+            character.Initialize();
         }
+        LoadEnemies();
+
+        foreach (Enemy enemy in enemies)
+        {
+            enemy.maxHealth = enemy.health;
+            enemy.Initialize();
+        }
+
+
         //DisplayCharacters();
         foreach (Character character in characters)
         {
@@ -39,12 +48,20 @@ public class CharacterLoader : MonoBehaviour
 
         foreach (Character character in characters)
         {
+            // Load character prefab from Resources/Characters folder
+            character.characterPrefab = Resources.Load<GameObject>($"Prefabs/{character.name}");
+            if (character.characterPrefab == null)
+            {
+                Debug.LogError($"Failed to load prefab for character: {character.name}");
+            }
+
             foreach (Skill skill in character.skills)
             {
                 skill.skillIcon = Resources.Load<Sprite>("Skills/" + skill.name);
             }
         }
     }
+
 
     void LoadEnemies()
     {
@@ -61,11 +78,19 @@ public class CharacterLoader : MonoBehaviour
 
         foreach (Enemy enemy in enemies)
         {
+            // Load enemy prefab from Resources/Prefabs/Enemies folder
+            enemy.characterPrefab = Resources.Load<GameObject>($"Prefabs/Enemies/{enemy.name}");
+            if (enemy.characterPrefab == null)
+            {
+                Debug.LogError($"Failed to load prefab for enemy: {enemy.name}");
+            }
+
             foreach (Skill skill in enemy.skills)
             {
                 skill.skillIcon = Resources.Load<Sprite>("Skills/" + skill.name);
             }
         }
+
     }
 
     void DisplayCharacters()

@@ -1,15 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static AnimationConstants;
-
 
 public class CombatManager : MonoBehaviour
 {
-    // Singleton instance
     public static CombatManager Instance { get; private set; }
 
-    private void Awake()
+    private bool isActionComplete = false;
+
+    void Awake()
     {
         if (Instance != null && Instance != this)
         {
@@ -22,41 +21,53 @@ public class CombatManager : MonoBehaviour
         }
     }
 
-    public void ExecuteAction(Character attacker, Skill skill, Character target = null)
+    public bool IsActionComplete()
     {
-        Debug.Log($"{attacker.name} is using {skill.name}!");
-
-        // Use provided target if available, otherwise find one
-        if (target == null)
-        {
-            target = FindTarget(attacker);
-            if (target == null)
-            {
-                Debug.Log("No valid target found.");
-                return;
-            }
-        }
-
-        StartCoroutine(PerformAttack(attacker, skill, target));
+        return isActionComplete;
     }
 
-
-    private IEnumerator PerformAttack(Character attacker, Skill skill, Character target)
+    public void MarkActionComplete()
     {
-        // Play attack animation
-        attacker.PlayAnimation(Attack);
+        isActionComplete = true;
+    }
 
+    public void ResetActionState()
+    {
+        isActionComplete = false;
+    }
 
-        yield return new WaitForSeconds(0.5f); // Czekanie na część animacji ataku
+    public void ExecuteAction(Character character, Skill skill, Character target)
 
-        // Obliczanie trafienia
-        if (UnityEngine.Random.Range(0, 100) > skill.hitChance)
+    {
+        if (character == null)
         {
-            Debug.Log($"{attacker.name} missed {skill.name} on {target.name}!");
+            Debug.LogError("Character is null in ExecuteAction");
+            return;
+        }
+
+        Debug.Log($"{character.name} is using {skill.name}!");
+        ResetActionState();
+        StartCoroutine(PerformAction(character, skill, target));
+    }
+
+    private IEnumerator PerformAction(Character character, Skill skill, Character target)
+    {
+        if (target == null)
+
+        {
+            Debug.LogWarning("No target specified for action");
+            MarkActionComplete();
             yield break;
         }
 
-        // Obliczanie obrażeń
+        if (UnityEngine.Random.Range(0, 100) > skill.hitChance)
+        {
+            Debug.Log($"{character.name} missed {skill.name} on {target.name}!");
+            MarkActionComplete();
+            yield break;
+        }
+
+        // Apply damage
         int damage = skill.damage;
         int modifier = UnityEngine.Random.Range(-skill.damageModifier, skill.damageModifier + 1);
         damage += damage * modifier / 100;
@@ -65,47 +76,28 @@ public class CombatManager : MonoBehaviour
         if (isCrit)
         {
             damage = (int)(damage * 1.5f);
-            Debug.Log($"{attacker.name} dealt a critical hit!");
+            Debug.Log($"{character.name} dealt a critical hit!");
         }
 
-        // Play hurt animation
-        target.PlayAnimation(Hurt);
-
-
-        yield return new WaitForSeconds(0.3f); // Czekanie na efekt animacji obrażeń
-
-        // Zastosowanie obrażeń
-        target.TakeDamage(damage);
-
-        // Jeśli postać umiera, odtwarzamy animację śmierci
-        if (!target.IsAlive())
+        if (target != null)
         {
-            target.PlayAnimation(Die);
+            target.TakeDamage(damage);
+            int remainingHP = target.health;
 
+            Debug.Log($"{character.name} uses {skill.name} on {target.name}");
+            Debug.Log($"Damage dealt: {damage}");
+            Debug.Log($"{target.name}'s remaining HP: {remainingHP}");
+        }
+
+        // Simulate action duration
+        yield return new WaitForSeconds(1.5f);
+        
+        if (target != null && !target.IsAlive())
+        {
             Debug.Log($"{target.name} has died!");
+            yield return new WaitForSeconds(1.5f);
         }
-
-        // Return to idle animation after action
-        attacker.PlayAnimation(Idle);
-        yield return new WaitForSeconds(0.5f); // Wait for animations to finish
-
-
-        // Przekazanie tury
-        TurnManager.Instance.EndTurn();
+        
+        MarkActionComplete();
     }
-
-    Character FindTarget(Character attacker)
-    {
-        List<Character> potentialTargets = attacker.isEnemy ? 
-            CharacterManager.Instance.selectedCharacters : 
-            TurnManager.Instance.enemyTeam;
-
-        // Return first alive target if no specific target is selected
-        foreach (Character target in potentialTargets)
-        {
-            if (target.IsAlive()) return target;
-        }
-        return null;
-    }
-
 }
