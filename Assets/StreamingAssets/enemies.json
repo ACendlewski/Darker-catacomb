@@ -27,13 +27,6 @@
                     "hitChance": 90,
                     "critChance": 10,
                     "damageModifier": 5
-                },
-                {
-                    "name": "Defensive Stance",
-                    "damage": -20,
-                    "hitChance": 100,
-                    "critChance": 0,
-                    "damageModifier": 0
                 }
             ]
         },
@@ -64,13 +57,6 @@
                     "hitChance": 60,
                     "critChance": 10,
                     "damageModifier": 5
-                },
-                {
-                    "name": "Bandage",
-                    "damage": -10,
-                    "hitChance": 100,
-                    "critChance": 0,
-                    "damageModifier": 0
                 }
             ]
         },
@@ -89,18 +75,11 @@
                     "damageModifier": 10
                 },
                 {
-                    "name": "Healing Prayer",
-                    "damage": -30,
+                    "name": "Sticky",
+                    "damage": 20,
                     "hitChance": 100,
                     "critChance": 0,
-                    "damageModifier": 0
-                },
-                {
-                    "name": "Divine Blessing",
-                    "damage": -20,
-                    "hitChance": 100,
-                    "critChance": 0,
-                    "damageModifier": 0
+                    "damageModifier": 15
                 },
                 {
                     "name": "Holy Shock",
@@ -131,13 +110,6 @@
                     "hitChance": 90,
                     "critChance": 20,
                     "damageModifier": 5
-                },
-                {
-                    "name": "Shadow Step",
-                    "damage": -15,
-                    "hitChance": 100,
-                    "critChance": 0,
-                    "damageModifier": 0
                 },
                 {
                     "name": "Quick Slash",

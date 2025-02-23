@@ -120,30 +120,30 @@ public class TurnManager : MonoBehaviour
                 Debug.LogWarning("Previous player turn still active - waiting...");
                 return;
             }
-    Character currentCharacter = turnOrder[currentTurnIndex]; // Ensure currentCharacter is defined
+            Character currentCharacter = turnOrder[currentTurnIndex]; // Ensure currentCharacter is defined
             if (!currentCharacter.IsAlive())
             {
                 EndTurn();
                 return;
             }
 
-Debug.Log("It's " + currentCharacter.name + "'s turn!");
-characterStatsUI.ShowCharacterStats(currentCharacter);
-// Character turn started
+            Debug.Log("It's " + currentCharacter.name + "'s turn!");
+            characterStatsUI.ShowCharacterStats(currentCharacter);
+            // Character turn started
 
 
-if (currentCharacter.isEnemy)
-{
-    StartCoroutine(EnemyTurn(currentCharacter));
-}
-else
-{
-    // Show action menu and wait for player input
-    isPlayerTurnActive = true;
-    ShowActionMenu(currentCharacter);
-    Debug.Log($"Player {currentCharacter.name}'s turn started - waiting for input");
-    return; // Don't proceed until player makes a choice
-}
+            if (currentCharacter.isEnemy)
+            {
+                StartCoroutine(EnemyTurn(currentCharacter));
+            }
+            else
+            {
+                // Show action menu and wait for player input
+                isPlayerTurnActive = true;
+                ShowActionMenu(currentCharacter);
+                Debug.Log($"Player {currentCharacter.name}'s turn started - waiting for input");
+                return; // Don't proceed until player makes a choice
+            }
 
 
         }
@@ -151,457 +151,461 @@ else
 
 
     IEnumerator EnemyTurn(Character enemy)
-{
-    yield return new WaitForSeconds(1.0f);
-
-    if (enemy.skills.Count > 0)
     {
-        Skill randomSkill = enemy.skills[Random.Range(0, enemy.skills.Count)];
-        Character target = SelectRandomTarget(playerTeam);
+        yield return new WaitForSeconds(1.0f);
 
-        if (target != null)
+        if (enemy.skills.Count > 0)
         {
-            Debug.Log($"{enemy.name} uses {randomSkill.name} on {target.name}!");
-            combatManager.ExecuteAction(enemy, randomSkill, target);
+            EnemyAI enemyAI = new EnemyAI(); // Create an instance of EnemyAI
+            Character target = enemyAI.FindBestTarget(enemy); // Pass the enemy character to FindBestTarget
 
+            Skill selectedSkill = enemyAI.ChooseBestSkill(target, enemy); // Pass the enemy character to ChooseBestSkill
+
+
+
+
+            if (target != null && target.IsAlive())
+            {
+                Debug.Log($"{enemy.name} uses {selectedSkill.name} on {target.name}!");
+                combatManager.ExecuteAction(enemy, selectedSkill, target);
+            }
         }
-    }
 
-    yield return new WaitForSeconds(0.5f);
-    EndTurn();
-}
-
-Character SelectRandomTarget(List<Character> targets)
-{
-    List<Character> aliveTargets = targets.FindAll(t => t.IsAlive());
-    return aliveTargets.Count > 0 ? aliveTargets[Random.Range(0, aliveTargets.Count)] : null;
-}
-
-public void EndTurn()
-{
-    // Verify turn state before proceeding
-    if (isPlayerTurnActive)
-    {
-        Debug.LogWarning("Cannot end turn - player turn still active");
-        return;
-    }
-
-    if (IsGameOver())
-    {
-        ShowGameOverScreen();
-        return;
-    }
-
-
-    // Move to next character in speed-based order
-    currentTurnIndex++;
-
-    // If we've reached the end of the turn order, start new round
-    if (currentTurnIndex >= turnOrder.Count)
-    {
-        currentTurnIndex = 0;
-        turnNumber++;
-        UpdateTurnNumberText();
-    }
-
-    characterStatsUI.HideCharacterStats();
-    HideActionMenu();
-    UpdateTurnOrderText();
-
-    // Start next turn only if the next character is alive
-    if (turnOrder[currentTurnIndex].IsAlive())
-    {
-        StartTurn();
-    }
-    else
-    {
-        // Skip dead characters
+        yield return new WaitForSeconds(0.5f);
         EndTurn();
     }
-}
 
-
-private bool IsGameOver()
-{
-    bool allPlayersDead = playerTeam.TrueForAll(character => !character.IsAlive());
-    bool allEnemiesDead = enemyTeam.TrueForAll(character => !character.IsAlive());
-    return allPlayersDead || allEnemiesDead;
-}
-
-private void ShowGameOverScreen()
-{
-    string winner = playerTeam.Exists(character => character.IsAlive()) ? "Gracze wygrali!" : "Wrogowie wygrali!";
-    Debug.Log("KONIEC GRY: " + winner);
-    turnNumberText.text = $"{turnNumberText.text} KONIEC GRY";
-
-    foreach (Character character in playerTeam.Concat(enemyTeam))
+    Character SelectRandomTarget(List<Character> targets)
     {
-        if (character.IsAlive())
-        {
-            // Character won
+        List<Character> aliveTargets = targets.FindAll(t => t.IsAlive());
+        return aliveTargets.Count > 0 ? aliveTargets[Random.Range(0, aliveTargets.Count)] : null;
+    }
 
+    public void EndTurn()
+    {
+        // Verify turn state before proceeding
+        if (isPlayerTurnActive)
+        {
+            Debug.LogWarning("Cannot end turn - player turn still active");
+            return;
+        }
+
+        if (IsGameOver())
+        {
+            ShowGameOverScreen();
+            return;
+        }
+
+
+        // Move to next character in speed-based order
+        currentTurnIndex++;
+
+        // If we've reached the end of the turn order, start new round
+        if (currentTurnIndex >= turnOrder.Count)
+        {
+            currentTurnIndex = 0;
+            turnNumber++;
+            UpdateTurnNumberText();
+        }
+
+        characterStatsUI.HideCharacterStats();
+        HideActionMenu();
+        UpdateTurnOrderText();
+
+        // Start next turn only if the next character is alive
+        if (turnOrder[currentTurnIndex].IsAlive())
+        {
+            StartTurn();
+        }
+        else
+        {
+            // Skip dead characters
+            EndTurn();
         }
     }
 
-    StopAllCoroutines();
-    enabled = false;
-}
 
-void ShowActionMenu(Character character)
-{
-    if (actionMenuPanel == null || actionButtonPrefab == null)
+    private bool IsGameOver()
     {
-        Debug.LogError("ActionMenuPanel or ActionButtonPrefab is not assigned!");
-        return;
+        bool allPlayersDead = playerTeam.TrueForAll(character => !character.IsAlive());
+        bool allEnemiesDead = enemyTeam.TrueForAll(character => !character.IsAlive());
+        return allPlayersDead || allEnemiesDead;
     }
 
-    selectedEnemy = null;
-    selectedSkill = null;
-    if (character.skills == null || character.skills.Count == 0)
+    private void ShowGameOverScreen()
     {
-        Debug.LogError("Character skills are not initialized or empty!");
-        return;
-    }
+        string winner = playerTeam.Exists(character => character.IsAlive()) ? "Gracze wygrali!" : "Wrogowie wygrali!";
+        Debug.Log("KONIEC GRY: " + winner);
+        turnNumberText.text = $"{turnNumberText.text} KONIEC GRY";
 
-    actionMenuPanel.SetActive(true);
-    CanvasGroup canvasGroup = actionMenuPanel.GetComponent<CanvasGroup>() ?? actionMenuPanel.AddComponent<CanvasGroup>();
-
-    canvasGroup.alpha = character.isEnemy ? 0.5f : 1f;
-    canvasGroup.interactable = !character.isEnemy;
-    canvasGroup.blocksRaycasts = !character.isEnemy;
-
-    foreach (Transform child in actionMenuPanel.transform)
-    {
-        Destroy(child.gameObject);
-    }
-
-    foreach (Skill skill in character.skills)
-    {
-        GameObject skillButton = Instantiate(actionButtonPrefab, actionMenuPanel.transform);
-        skillButton.name = skill.name;
-
-        Button button = skillButton.GetComponent<Button>(); // Ensure button is defined
-
-        button.interactable = !character.isEnemy; // Moved this line to ensure button is defined in the correct scope
-
-
-
-
-        TextMeshProUGUI buttonText = skillButton.GetComponentInChildren<TextMeshProUGUI>();
-        if (buttonText != null)
+        foreach (Character character in playerTeam.Concat(enemyTeam))
         {
-            buttonText.text = skill.name;
-        }
-
-        EventTrigger trigger = skillButton.GetComponent<EventTrigger>() ?? skillButton.AddComponent<EventTrigger>();
-        trigger.triggers.Clear();
-
-        EventTrigger.Entry entryEnter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-        entryEnter.callback.AddListener((data) => ShowSkillDescription(skill));
-        trigger.triggers.Add(entryEnter);
-
-        button.onClick.AddListener(() => OnActionButtonClicked(character, skill));
-        skillButton.GetComponent<Button>().interactable = !character.isEnemy;
-    }    
-}
-
-private void ShowEnemyTargets() // Moved method inside the class
-
-{
-    // Clear previous selections
-    foreach (var charUI in characterStatsUI.GetCharacterUIs())
-    {
-        var highlight = charUI.GetComponent<HighlightEffect>();
-        if (highlight != null)
-        {
-            highlight.SetHighlight(false);
-        }
-    }
-
-    // Show enemy targets
-    foreach (Character enemy in enemyTeam)
-    {
-        if (enemy.IsAlive())
-        {
-            var charUI = characterStatsUI.GetCharacterUI(enemy.name);
-            if (charUI != null)
+            if (character.IsAlive())
             {
-                var highlight = charUI.GetComponent<HighlightEffect>();
-                if (highlight != null)
-                {
-                    highlight.SetHighlight(true);
-                }
-                AssignTargetSelectionTriggers(charUI.gameObject, false);
+                // Character won
+
             }
         }
+
+        StopAllCoroutines();
+        enabled = false;
     }
-}
 
-private void ShowFriendlyTargets() // Moved method inside the class
-
-{
-    // Clear previous selections
-    foreach (var charUI in characterStatsUI.GetCharacterUIs())
+    void ShowActionMenu(Character character)
     {
-        var highlight = charUI.GetComponent<HighlightEffect>();
-        if (highlight != null)
+        if (actionMenuPanel == null || actionButtonPrefab == null)
         {
-            highlight.SetHighlight(false);
+            Debug.LogError("ActionMenuPanel or ActionButtonPrefab is not assigned!");
+            return;
         }
-    }
 
-    // Show friendly targets
-    foreach (Character friendly in playerTeam)
-    {
-        if (friendly.IsAlive())
+        selectedEnemy = null;
+        selectedSkill = null;
+        if (character.skills == null || character.skills.Count == 0)
         {
-            var charUI = characterStatsUI.GetCharacterUI(friendly.name);
-            if (charUI != null)
+            Debug.LogError("Character skills are not initialized or empty!");
+            return;
+        }
+
+        actionMenuPanel.SetActive(true);
+        CanvasGroup canvasGroup = actionMenuPanel.GetComponent<CanvasGroup>() ?? actionMenuPanel.AddComponent<CanvasGroup>();
+
+        canvasGroup.alpha = character.isEnemy ? 0.5f : 1f;
+        canvasGroup.interactable = !character.isEnemy;
+        canvasGroup.blocksRaycasts = !character.isEnemy;
+
+        foreach (Transform child in actionMenuPanel.transform)
+        {
+            Destroy(child.gameObject);
+        }
+
+        foreach (Skill skill in character.skills)
+        {
+            GameObject skillButton = Instantiate(actionButtonPrefab, actionMenuPanel.transform);
+            skillButton.name = skill.name;
+
+            Button button = skillButton.GetComponent<Button>(); // Ensure button is defined
+
+            button.interactable = !character.isEnemy; // Moved this line to ensure button is defined in the correct scope
+
+
+
+
+            TextMeshProUGUI buttonText = skillButton.GetComponentInChildren<TextMeshProUGUI>();
+            if (buttonText != null)
             {
-                var highlight = charUI.GetComponent<HighlightEffect>();
-                if (highlight != null)
-                {
-                    highlight.SetHighlight(true);
-                }
-                AssignTargetSelectionTriggers(charUI.gameObject, true);
+                buttonText.text = skill.name;
             }
+
+            EventTrigger trigger = skillButton.GetComponent<EventTrigger>() ?? skillButton.AddComponent<EventTrigger>();
+            trigger.triggers.Clear();
+
+            EventTrigger.Entry entryEnter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            entryEnter.callback.AddListener((data) => ShowSkillDescription(skill));
+            trigger.triggers.Add(entryEnter);
+
+            button.onClick.AddListener(() => OnActionButtonClicked(character, skill));
+            skillButton.GetComponent<Button>().interactable = !character.isEnemy;
         }
     }
-}
 
-private void PerformAction(Character target) // Moved method inside the class
+    private void ShowEnemyTargets() // Moved method inside the class
 
-{
-    if (selectedSkill == null || target == null)
     {
-        Debug.LogWarning("Both skill and target must be selected!");
-        return;
-    }
-
-    StartCoroutine(PerformPlayerAction(turnOrder[currentTurnIndex], selectedSkill, target));
-}
-
-private void ShowSkillDescription(Skill skill) // Moved method inside the class
-
-{
-    if (skillsText != null)
-    {
-        skillsText.text = $"{(skill.damage > 0 ? "Dmg: " : "Heal: ")} {skill.damage - skill.damageModifier} - {skill.damage + skill.damageModifier}\n" +
-             $"Hit: {skill.hitChance}%\n" +
-             $"Crit: {skill.critChance}%\n";
-    }
-}
-
-void HideSkillDescription() // Moved method inside the class
-
-{
-    if (selectedSkill == null && skillsText != null)
-    {
-        skillsText.text = "";
-    }
-}
-
-void OnActionButtonClicked(Character character, Skill skill) // Moved method inside the class
-
-{
-    if (selectedEnemy == null)
-    {
-        Debug.Log("Please select an enemy first!");
-        if (skillsText != null)
+        // Clear previous selections
+        foreach (var charUI in characterStatsUI.GetCharacterUIs())
         {
-            skillsText.text = "Please select an enemy first!";
-            skillsText.color = Color.red;
-        }
-        return;
-    }
-
-    Debug.Log($"{character.name} uses {skill.name} on {selectedEnemy.name}!");
-    selectedSkill = skill;
-
-    StartCoroutine(PerformPlayerAction(character, skill, selectedEnemy));
-    selectedEnemy = null;
-
-    if (skillsText != null)
-    {
-        skillsText.text = "Select an enemy to attack";
-        skillsText.color = Color.white;
-    }
-}
-
-public void SelectTarget(Character target, bool isHealingSkill) // Changed to public
-{
-    if (target == null || !target.IsAlive())
-    {
-        Debug.LogWarning("Selected target is null or dead.");
-        return;
-    }
-
-    selectedEnemy = target;
-    Debug.Log(isHealingSkill ? $"Selected ally: {target.name}" : $"Selected enemy: {target.name}");
-
-    // Update UI with clear enemy selection
-    if (skillsText != null)
-    {
-        skillsText.text = $"Selected: {target.name}\nHP: {target.health}";
-        skillsText.color = Color.red;
-    }
-
-    // Highlight selected enemy in UI
-    var characterUIs = characterStatsUI.GetCharacterUIs();
-    foreach (var charUI in characterUIs)
-    {
-        // Get the character by name from the enemy team
-        Character character = enemyTeam.FirstOrDefault(c => c.name == charUI.name);
-        if (character != null)
-        {
-            // Add highlight effect
             var highlight = charUI.GetComponent<HighlightEffect>();
             if (highlight != null)
             {
-                highlight.SetHighlight(character == target);
+                highlight.SetHighlight(false);
             }
         }
-    }
 
-    UpdateSkillButtonsState();
-}
-
-public void AssignTargetSelectionTriggers(GameObject targetObject, bool isHealingSkill) // Changed to public
-{
-    Button targetButton = targetObject.GetComponent<Button>();
-    if (targetButton == null)
-    {
-        targetButton = targetObject.AddComponent<Button>();
-    }
-
-    targetButton.onClick.RemoveAllListeners();
-    targetButton.onClick.AddListener(() =>
-    {
-        Character targetCharacter = targetObject.GetComponent<Character>();
-        if (targetCharacter != null)
+        // Show enemy targets
+        foreach (Character enemy in enemyTeam)
         {
-            SelectTarget(targetCharacter, isHealingSkill);
-            if (selectedSkill != null)
+            if (enemy.IsAlive())
             {
-                PerformAction(targetCharacter);
+                var charUI = characterStatsUI.GetCharacterUI(enemy.name);
+                if (charUI != null)
+                {
+                    var highlight = charUI.GetComponent<HighlightEffect>();
+                    if (highlight != null)
+                    {
+                        highlight.SetHighlight(true);
+                    }
+                    AssignTargetSelectionTriggers(charUI.gameObject, false);
+                }
             }
         }
-    });
-
-    var image = targetObject.GetComponent<Image>();
-    if (image != null)
-    {
-        // Set different colors for friendly vs enemy targets
-        image.color = isHealingSkill ?
-            new Color(0.5f, 1, 0.5f, 0.8f) : // Green tint for friendly targets
-            new Color(1, 0.5f, 0.5f, 0.8f); // Red tint for enemy targets
     }
-}
 
-void UpdateSkillButtonsState() // Moved method inside the class
+    private void ShowFriendlyTargets() // Moved method inside the class
 
-{
-    if (actionMenuPanel != null)
     {
-        foreach (Transform child in actionMenuPanel.transform)
+        // Clear previous selections
+        foreach (var charUI in characterStatsUI.GetCharacterUIs())
         {
-            Button button = child.GetComponent<Button>();
-            if (button != null)
+            var highlight = charUI.GetComponent<HighlightEffect>();
+            if (highlight != null)
             {
-                button.interactable = !turnOrder[currentTurnIndex].isEnemy;
+                highlight.SetHighlight(false);
+            }
+        }
+
+        // Show friendly targets
+        foreach (Character friendly in playerTeam)
+        {
+            if (friendly.IsAlive())
+            {
+                var charUI = characterStatsUI.GetCharacterUI(friendly.name);
+                if (charUI != null)
+                {
+                    var highlight = charUI.GetComponent<HighlightEffect>();
+                    if (highlight != null)
+                    {
+                        highlight.SetHighlight(true);
+                    }
+                    AssignTargetSelectionTriggers(charUI.gameObject, true);
+                }
             }
         }
     }
-}
 
-IEnumerator PerformPlayerAction(Character character, Skill skill, Character target) // Moved method inside the class
+    private void PerformAction(Character target) // Moved method inside the class
 
-{
-    HideActionMenu();
-    combatManager.ExecuteAction(character, skill, target);
-    yield return new WaitForSeconds(1.5f);
-
-    // Only end turn after action is complete
-    yield return new WaitForSeconds(1.5f); // Wait for action animation or effects
-
-    // Verify action completion before ending turn
-    if (combatManager.IsActionComplete())
     {
+        if (selectedSkill == null || target == null)
+        {
+            Debug.LogWarning("Both skill and target must be selected!");
+            return;
+        }
+
+        StartCoroutine(PerformPlayerAction(turnOrder[currentTurnIndex], selectedSkill, target));
+    }
+
+    private void ShowSkillDescription(Skill skill) // Moved method inside the class
+
+    {
+        if (skillsText != null)
+        {
+            skillsText.text = $"{(skill.damage > 0 ? "Dmg: " : "Heal: ")} {skill.damage - skill.damageModifier} - {skill.damage + skill.damageModifier}\n" +
+                 $"Hit: {skill.hitChance}%\n" +
+                 $"Crit: {skill.critChance}%\n";
+        }
+    }
+
+    void HideSkillDescription() // Moved method inside the class
+
+    {
+        if (selectedSkill == null && skillsText != null)
+        {
+            skillsText.text = "";
+        }
+    }
+
+    void OnActionButtonClicked(Character character, Skill skill) // Moved method inside the class
+
+    {
+        if (selectedEnemy == null)
+        {
+            Debug.Log("Please select an enemy first!");
+            if (skillsText != null)
+            {
+                skillsText.text = "Please select an enemy first!";
+                skillsText.color = Color.red;
+            }
+            return;
+        }
+
+        Debug.Log($"{character.name} uses {skill.name} on {selectedEnemy.name}!");
+        selectedSkill = skill;
+
+        StartCoroutine(PerformPlayerAction(character, skill, selectedEnemy));
+        selectedEnemy = null;
+
+        if (skillsText != null)
+        {
+            skillsText.text = "Select an enemy to attack";
+            skillsText.color = Color.white;
+        }
+    }
+
+    public void SelectTarget(Character target, bool isHealingSkill) // Changed to public
+    {
+        if (target == null || !target.IsAlive())
+        {
+            Debug.LogWarning("Selected target is null or dead.");
+            return;
+        }
+
+        selectedEnemy = target;
+        Debug.Log(isHealingSkill ? $"Selected ally: {target.name}" : $"Selected enemy: {target.name}");
+
+        // Update UI with clear enemy selection
+        if (skillsText != null)
+        {
+            skillsText.text = $"Selected: {target.name}\nHP: {target.health}";
+            skillsText.color = Color.red;
+        }
+
+        // Highlight selected enemy in UI
+        var characterUIs = characterStatsUI.GetCharacterUIs();
+        foreach (var charUI in characterUIs)
+        {
+            // Get the character by name from the enemy team
+            Character character = enemyTeam.FirstOrDefault(c => c.name == charUI.name);
+            if (character != null)
+            {
+                // Add highlight effect
+                var highlight = charUI.GetComponent<HighlightEffect>();
+                if (highlight != null)
+                {
+                    highlight.SetHighlight(character == target);
+                }
+            }
+        }
+
+        UpdateSkillButtonsState();
+    }
+
+    public void AssignTargetSelectionTriggers(GameObject targetObject, bool isHealingSkill) // Changed to public
+    {
+        Button targetButton = targetObject.GetComponent<Button>();
+        if (targetButton == null)
+        {
+            targetButton = targetObject.AddComponent<Button>();
+        }
+
+        targetButton.onClick.RemoveAllListeners();
+        targetButton.onClick.AddListener(() =>
+        {
+            Character targetCharacter = targetObject.GetComponent<Character>();
+            if (targetCharacter != null)
+            {
+                SelectTarget(targetCharacter, isHealingSkill);
+                if (selectedSkill != null)
+                {
+                    PerformAction(targetCharacter);
+                }
+            }
+        });
+
+        var image = targetObject.GetComponent<Image>();
+        if (image != null)
+        {
+            // Set different colors for friendly vs enemy targets
+            image.color = isHealingSkill ?
+                new Color(0.5f, 1, 0.5f, 0.8f) : // Green tint for friendly targets
+                new Color(1, 0.5f, 0.5f, 0.8f); // Red tint for enemy targets
+        }
+    }
+
+    void UpdateSkillButtonsState() // Moved method inside the class
+
+    {
+        if (actionMenuPanel != null)
+        {
+            foreach (Transform child in actionMenuPanel.transform)
+            {
+                Button button = child.GetComponent<Button>();
+                if (button != null)
+                {
+                    button.interactable = !turnOrder[currentTurnIndex].isEnemy;
+                }
+            }
+        }
+    }
+
+    IEnumerator PerformPlayerAction(Character character, Skill skill, Character target) // Moved method inside the class
+
+    {
+        HideActionMenu();
+        combatManager.ExecuteAction(character, skill, target);
+        yield return new WaitForSeconds(1.5f);
+
+        // Only end turn after action is complete
+        yield return new WaitForSeconds(1.5f); // Wait for action animation or effects
+
+        // Verify action completion before ending turn
+        if (combatManager.IsActionComplete())
+        {
+            isPlayerTurnActive = false;
+            Debug.Log($"Player action complete - ending turn");
+            EndTurn();
+        }
+        else
+        {
+            Debug.LogWarning("Action not complete - waiting...");
+            yield return new WaitUntil(() => combatManager.IsActionComplete());
+            isPlayerTurnActive = false;
+            Debug.Log($"Player action finally complete - ending turn");
+            EndTurn();
+        }
+
         isPlayerTurnActive = false;
-        Debug.Log($"Player action complete - ending turn");
-        EndTurn();
-    }
-    else
-    {
-        Debug.LogWarning("Action not complete - waiting...");
-        yield return new WaitUntil(() => combatManager.IsActionComplete());
-        isPlayerTurnActive = false;
-        Debug.Log($"Player action finally complete - ending turn");
-        EndTurn();
     }
 
-    isPlayerTurnActive = false;
-}
+    void HideActionMenu() // Moved method inside the class
 
-void HideActionMenu() // Moved method inside the class
-
-{
-    actionMenuPanel.SetActive(false);
-}
-
-void UpdateTurnOrderText() // Moved method inside the class
-
-{
-    string turnOrderDisplay = "Turn Order:\n";
-    foreach (Character character in turnOrder)
     {
-        turnOrderDisplay += $"SPD: {character.speed}";
-        turnOrderDisplay += character.isEnemy ? " (Enemy)" : "";
-        turnOrderDisplay += $" {character.name}";
-        turnOrderDisplay += $" HP: {character.health}\n";
-    }
-    turnOrderText.text = turnOrderDisplay;
-}
-
-void UpdateTurnNumberText() // Moved method inside the class
-
-{
-    turnNumberText.text = "Turn: " + turnNumber;
-}
-
-void LogTeams() // Moved method inside the class
-
-{
-    Debug.Log("Player Team:");
-    foreach (Character player in playerTeam)
-    {
-        Debug.Log($"- {player.name} (Health: {player.health}, Speed: {player.speed})");
+        actionMenuPanel.SetActive(false);
     }
 
-    Debug.Log("Enemy Team:");
-    foreach (Character enemy in enemyTeam)
+    void UpdateTurnOrderText() // Moved method inside the class
+
     {
-        Debug.Log($"- {enemy.name} (Health: {enemy.health}, Speed: {enemy.speed})");
+        string turnOrderDisplay = "Turn Order:\n";
+        foreach (Character character in turnOrder)
+        {
+            turnOrderDisplay += $"SPD: {character.speed}";
+            turnOrderDisplay += character.isEnemy ? " (Enemy)" : "";
+            turnOrderDisplay += $" {character.name}";
+            turnOrderDisplay += $" HP: {character.health}\n";
+        }
+        turnOrderText.text = turnOrderDisplay;
     }
 
-    Debug.Log("Turn Order:");
-    foreach (Character character in turnOrder)
+    void UpdateTurnNumberText() // Moved method inside the class
+
     {
-        Debug.Log($"- {character.name} (Speed: {character.speed})");
+        turnNumberText.text = "Turn: " + turnNumber;
     }
-}
 
-void AddTestCharacters() // Moved method inside the class
+    void LogTeams() // Moved method inside the class
 
-{
-    playerTeam.Add(new Character()
     {
-        name = "Test Warrior",
-        health = 1000,
-        attack = 25,
-        defense = 10,
-        speed = 50,
-        characterPrefab = null
-    });
-}
+        Debug.Log("Player Team:");
+        foreach (Character player in playerTeam)
+        {
+            Debug.Log($"- {player.name} (Health: {player.health}, Speed: {player.speed})");
+        }
+
+        Debug.Log("Enemy Team:");
+        foreach (Character enemy in enemyTeam)
+        {
+            Debug.Log($"- {enemy.name} (Health: {enemy.health}, Speed: {enemy.speed})");
+        }
+
+        Debug.Log("Turn Order:");
+        foreach (Character character in turnOrder)
+        {
+            Debug.Log($"- {character.name} (Speed: {character.speed})");
+        }
+    }
+
+    void AddTestCharacters() // Moved method inside the class
+
+    {
+        playerTeam.Add(new Character()
+        {
+            name = "Test Warrior",
+            health = 1000,
+            attack = 25,
+            defense = 10,
+            speed = 50,
+            characterPrefab = null
+        });
+    }
 }
