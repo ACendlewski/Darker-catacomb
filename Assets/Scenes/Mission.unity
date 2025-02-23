@@ -3724,6 +3724,7 @@ MonoBehaviour:
   actionMenuPanel: {fileID: 449475539}
   actionButtonPrefab: {fileID: 8768549784935748887, guid: a1f096e233ba4bf49a2c14e5e6d95abb, type: 3}
   skillsText: {fileID: 123923950}
+  AIText: {fileID: 816905090}
   numberOfEnemies: 4
   playerTeam: []
   enemyTeam: []
@@ -3756,7 +3757,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c2fa9d269595c34993eef624b384b8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  decisionText: {fileID: 816905090}
+  decisionText: {fileID: 0}
 --- !u!1 &674447848
 GameObject:
   m_ObjectHideFlags: 0
@@ -4198,7 +4199,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &816905090
 MonoBehaviour:
   m_ObjectHideFlags: 0
