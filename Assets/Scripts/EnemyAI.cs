@@ -2,8 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
-using UnityEngine.UI;
-using TMPro;
+using TMPro; // Używamy TextMeshPro zamiast UnityEngine.UI
 
 public enum EnemyState
 {
@@ -13,44 +12,43 @@ public enum EnemyState
     Dead
 }
 
-
 public class EnemyAI : MonoBehaviour
 {
-    public TextMeshProUGUI decisionText; // Public TextMeshProUGUI field to show decisions
-    private List<string> decisionHistory = new List<string>(); // List to store last 5 decisions
-
+    public TextMeshProUGUI decisionText; // Zmieniono z Text na TextMeshProUGUI
+    private List<string> decisionHistory = new List<string>(); // Przechowuje do 5 ostatnich decyzji
 
     private EnemyState currentState;
     private Character target;
 
     void Start()
     {
-        ChangeState(EnemyState.Idle, null); // Pass null for character initially
+        ChangeState(EnemyState.Idle, null);
     }
 
-    public void Initialize(Character character) // Pass enemyCharacter as a parameter
+    public void Initialize(Character character)
     {
         if (character == null)
         {
             Debug.LogError("Enemy character component is missing!");
             return;
         }
-        ChangeState(EnemyState.Idle, character); // Pass the character instance
+        ChangeState(EnemyState.Idle, character);
     }
 
     void ChangeState(EnemyState newState, Character character)
     {
         currentState = newState;
+        LogDecision($"State changed to: {newState}");
         switch (currentState)
         {
             case EnemyState.Idle:
                 StartCoroutine(IdleRoutine());
                 break;
             case EnemyState.Evaluate:
-                EvaluateAction(character); // Pass character to EvaluateAction
+                EvaluateAction(character);
                 break;
             case EnemyState.Attack:
-                StartCoroutine(AttackRoutine(character)); // Pass character to AttackRoutine
+                StartCoroutine(AttackRoutine(character));
                 break;
             case EnemyState.Dead:
                 HandleDeath();
@@ -61,53 +59,53 @@ public class EnemyAI : MonoBehaviour
     IEnumerator IdleRoutine()
     {
         yield return new WaitForSeconds(1f);
-        ChangeState(EnemyState.Evaluate, null); // Pass null for character
+        ChangeState(EnemyState.Evaluate, null);
     }
 
     void EvaluateAction(Character character)
     {
-        target = FindBestTarget(character); // Pass character to FindBestTarget
+        target = FindBestTarget(character);
         if (target != null)
         {
-            LogDecision($"Target selected: {target.name}"); // Log decision
-            ChangeState(EnemyState.Attack, character); // Pass character to ChangeState
+            LogDecision($"Target selected: {target.name}");
+            ChangeState(EnemyState.Attack, character);
         }
         else
         {
-            ChangeState(EnemyState.Idle, character); // Pass character to ChangeState
+            ChangeState(EnemyState.Idle, character);
         }
     }
 
-
-    IEnumerator AttackRoutine(Character enemyCharacter) // Pass enemyCharacter as a parameter
+    IEnumerator AttackRoutine(Character enemyCharacter)
     {
         if (target == null || !target.IsAlive() || enemyCharacter.skills == null || enemyCharacter.skills.Count == 0)
         {
+            LogDecision("Attack aborted, ending turn");
             EndTurn();
             yield break;
         }
 
-        Skill chosenSkill = ChooseBestSkill(target, enemyCharacter); // Pass enemyCharacter
+        Skill chosenSkill = ChooseBestSkill(target, enemyCharacter);
         if (chosenSkill != null)
         {
+            LogDecision($"Using skill: {chosenSkill.name} on {target.name}");
             enemyCharacter.Attack(target, chosenSkill);
         }
 
-        yield return new WaitForSeconds(0.5f); // Short pause before changing state
+        yield return new WaitForSeconds(0.5f);
         EndTurn();
     }
 
     void HandleDeath()
     {
-        LogDecision($"{target.name} is dying..."); // Log decision
-        Debug.Log($"{target.name} is dying...");
+        LogDecision("Enemy has died.");
         Destroy(gameObject);
-        
     }
+
     void EndTurn()
-        {
-            ChangeState(EnemyState.Idle, null); // Pass null for character
-        }
+    {
+        ChangeState(EnemyState.Idle, null); // Pass null for character
+    }
 
     public Character FindBestTarget(Character character)
     {
@@ -121,7 +119,7 @@ public class EnemyAI : MonoBehaviour
 
         if (sortedTargets.Count == 0) return null;
 
-        if (Random.value < 0.2f) // 20% chance to choose a random target
+        if (Random.value < 0.2f)
         {
             return sortedTargets[Random.Range(0, sortedTargets.Count)];
         }
@@ -136,20 +134,17 @@ public class EnemyAI : MonoBehaviour
 
         if (target.health <= target.maxHealth * 0.45f)
         {
-            LogDecision($"Choosing skill based on target health: {target.health}"); // Log decision
-                                                                                    // If the target has < 45% HP, choose the skill with the highest hit chance
+            LogDecision($"Choosing skill based on low HP target: {target.name}");
             return enemyCharacter.skills
                 .OrderByDescending(s => s.hitChance)
                 .FirstOrDefault();
-
         }
         else
         {
-            // Normally choose the skill with the highest damage
+            LogDecision("Choosing highest damage skill");
             return enemyCharacter.skills
-
-                    .OrderByDescending(s => s.damage)
-                    .FirstOrDefault();
+                .OrderByDescending(s => s.damage)
+                .FirstOrDefault();
         }
     }
 
