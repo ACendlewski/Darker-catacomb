@@ -189,31 +189,59 @@ public class CharacterSelectionUI : MonoBehaviour
 
     public void RemoveCharacter(Character character)
     {
-        if (CharacterManager.Instance != null && CharacterManager.Instance.selectedCharacters.Contains(character))
+
         {
-            CharacterManager.Instance.selectedCharacters.Remove(character);
-            Debug.Log(character.name + " has been removed!");
-
-            UpdateSelectedCharacterButtons();
-
-            if (CharacterManager.Instance.selectedCharacters.Count < maxSelection)
+            if (CharacterManager.Instance != null && CharacterManager.Instance.selectedCharacters.Contains(character))
             {
-                startBattleButton.interactable = false;
-            }
+                CharacterManager.Instance.selectedCharacters.Remove(character);
+                Debug.Log(character.name + " has been removed!");
 
-            // Znajdź pierwszą instancję danej postaci w liście i usuń ją
-            for (int i = 0; i < activeCharacterPreviews.Count; i++)
-            {
-                if (activeCharacterPreviews[i].Key == character)
+                UpdateSelectedCharacterButtons();
+
+                if (CharacterManager.Instance.selectedCharacters.Count < maxSelection)
                 {
-                    Destroy(activeCharacterPreviews[i].Value);
-                    activeCharacterPreviews.RemoveAt(i);
-                    break; // Usuwamy tylko pierwszą instancję i przerywamy pętlę
+                    startBattleButton.interactable = false;
                 }
+
+                // Removing character previews from the scene
+
+                for (int i = activeCharacterPreviews.Count - 1; i >= 0; i--)
+                {
+                    if (activeCharacterPreviews[i].Key == character)
+                    {
+                        GameObject objToDestroy = activeCharacterPreviews[i].Value;
+
+                        // Check if the object exists in the scene before destroying
+
+                        if (objToDestroy != null)
+                        {
+                            Debug.Log("Destroying character prefab: " + objToDestroy.name);
+                            Destroy(objToDestroy);
+                        }
+
+                        // Remove the entry from the list
+
+                        activeCharacterPreviews.RemoveAt(i);
+                    }
+                }
+
+                // Update positions of remaining character previews
+
+                for (int i = 0; i < activeCharacterPreviews.Count; i++)
+                {
+                    if (activeCharacterPreviews[i].Value != null)
+                    {
+                        activeCharacterPreviews[i].Value.transform.position =
+                            characterContainer.position + characterSpacing * i;
+                    }
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"Attempted to remove character {character?.name} that wasn't in selected characters list");
             }
         }
     }
-
     public void ShowCharacterStats(Character character)
     {
         if (character == null)
@@ -221,8 +249,6 @@ public class CharacterSelectionUI : MonoBehaviour
             Debug.LogError("Character is null!");
             return;
         }
-
-        {
             characterStatsPanel.SetActive(true);
             characterNameText.text = "Name: " + character.name;
             healthText.text = "Health: " + character.health;
@@ -242,8 +268,6 @@ public class CharacterSelectionUI : MonoBehaviour
             {
                 skillsText.text = "Skills: None";
             }
-
-        }
     }
     public void HideCharacterStats()
     {
