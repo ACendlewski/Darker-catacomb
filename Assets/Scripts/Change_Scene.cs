@@ -6,9 +6,8 @@ using UnityEngine.SceneManagement;
 
 public class Change_Scene : MonoBehaviour
 {
-    
-    public Button changeSceneButton;  
-    public string sceneToLoad;        
+    public Button changeSceneButton;
+    public string sceneToLoad;
 
     void Start()
     {
@@ -17,8 +16,17 @@ public class Change_Scene : MonoBehaviour
             changeSceneButton.onClick.AddListener(() => ChangeScene(sceneToLoad));
         }
     }
+
     public void ChangeScene(string sceneName)
     {
-        SceneManager.LoadScene(sceneName);
+        if (sceneName.ToLower() == "quit")
+        {
+            Application.Quit();
+            Debug.Log("Zamykanie gry...");
+        }
+        else
+        {
+            SceneManager.LoadScene(sceneName);
+        }
     }
 }

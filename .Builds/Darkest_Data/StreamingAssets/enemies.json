@@ -7,9 +7,27 @@
             "defense": 18,
             "speed": 8,
             "skills": [
-                { "name": "Sword Strike", "damage": 20, "hitChance": 85, "critChance": 15, "damageModifier": 10 },
-                { "name": "Shield Wall", "damage": 0, "hitChance": 100, "critChance": 0, "damageModifier": 0 },
-                { "name": "Lance Charge", "damage": 35, "hitChance": 80, "critChance": 20, "damageModifier": 15 }
+                {
+                    "name": "Sword Strike",
+                    "damage": 20,
+                    "hitChance": 85,
+                    "critChance": 15,
+                    "damageModifier": 10
+                },
+                {
+                    "name": "Lance Charge",
+                    "damage": 35,
+                    "hitChance": 80,
+                    "critChance": 20,
+                    "damageModifier": 15
+                },
+                {
+                    "name": "Shield Slam",
+                    "damage": 15,
+                    "hitChance": 90,
+                    "critChance": 10,
+                    "damageModifier": 5
+                }
             ]
         },
         {
@@ -19,8 +37,27 @@
             "defense": 5,
             "speed": 12,
             "skills": [
-                { "name": "Rusty Sword", "damage": 10, "hitChance": 70, "critChance": 5, "damageModifier": 5 },
-                { "name": "Dirt Throw", "damage": 5, "hitChance": 90, "critChance": 0, "damageModifier": 0 }
+                {
+                    "name": "Rusty Sword",
+                    "damage": 10,
+                    "hitChance": 70,
+                    "critChance": 5,
+                    "damageModifier": 5
+                },
+                {
+                    "name": "Dirt Throw",
+                    "damage": 5,
+                    "hitChance": 90,
+                    "critChance": 0,
+                    "damageModifier": 0
+                },
+                {
+                    "name": "Desperate Swing",
+                    "damage": 15,
+                    "hitChance": 60,
+                    "critChance": 10,
+                    "damageModifier": 5
+                }
             ]
         },
         {
@@ -30,9 +67,27 @@
             "defense": 8,
             "speed": 10,
             "skills": [
-                { "name": "Holy Light", "damage": 0, "hitChance": 100, "critChance": 0, "damageModifier": 0 },
-                { "name": "Smite", "damage": 25, "hitChance": 80, "critChance": 15, "damageModifier": 10 },
-                { "name": "Healing Prayer", "damage": 0, "hitChance": 100, "critChance": 0, "damageModifier": 0 }
+                {
+                    "name": "Smite",
+                    "damage": 25,
+                    "hitChance": 80,
+                    "critChance": 15,
+                    "damageModifier": 10
+                },
+                {
+                    "name": "Sticky",
+                    "damage": 20,
+                    "hitChance": 100,
+                    "critChance": 0,
+                    "damageModifier": 15
+                },
+                {
+                    "name": "Holy Shock",
+                    "damage": 20,
+                    "hitChance": 85,
+                    "critChance": 10,
+                    "damageModifier": 5
+                }
             ]
         },
         {
@@ -42,9 +97,27 @@
             "defense": 7,
             "speed": 22,
             "skills": [
-                { "name": "Sneak Attack", "damage": 30, "hitChance": 85, "critChance": 25, "damageModifier": 10 },
-                { "name": "Pickpocket", "damage": 0, "hitChance": 100, "critChance": 0, "damageModifier": 0 },
-                { "name": "Smoke Bomb", "damage": 0, "hitChance": 100, "critChance": 0, "damageModifier": 0 }
+                {
+                    "name": "Sneak Attack",
+                    "damage": 30,
+                    "hitChance": 85,
+                    "critChance": 25,
+                    "damageModifier": 10
+                },
+                {
+                    "name": "Poisoned Blade",
+                    "damage": 20,
+                    "hitChance": 90,
+                    "critChance": 20,
+                    "damageModifier": 5
+                },
+                {
+                    "name": "Quick Slash",
+                    "damage": 15,
+                    "hitChance": 95,
+                    "critChance": 10,
+                    "damageModifier": 5
+                }
             ]
         }
     ]

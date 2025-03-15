@@ -81,7 +81,11 @@ public class TurnManager : MonoBehaviour
 
         SelectRandomEnemies();
         StartCoroutine(WaitForEnemies());
+        hasAppliedDifficultyMultiplier = false; // Initialize the flag
+
     }
+
+    private bool hasAppliedDifficultyMultiplier = false; // Flag to check if multiplier has been applied
 
     IEnumerator WaitForEnemies()
     {
@@ -94,6 +98,26 @@ public class TurnManager : MonoBehaviour
         characterStatsUI.SpawnAllCharacters(playerTeam, enemyTeam);
         UpdateTurnOrderText();
         UpdateTurnNumberText();
+
+        Debug.Log("Applying Difficulty Multiplier to enemies..."); // Debug log before applying
+        Debug.Log($"Difficulty Multiplier: {GameManager.Instance.DifficultyMultiplier}"); // Log the multiplier
+        if (!hasAppliedDifficultyMultiplier) // Check if multiplier has been applied
+
+        {
+            foreach (Character enemy in enemyTeam)
+            {
+                Debug.Log($"Before: {enemy.name} - Health: {enemy.health}, Attack: {enemy.attack}, Defense: {enemy.defense}"); // Log before applying multiplier
+                enemy.health = (int)(enemy.health * GameManager.Instance.DifficultyMultiplier); // Apply multiplier to enemy health
+                Debug.Log($"After: {enemy.name} - Health: {enemy.health}, Attack: {enemy.attack}, Defense: {enemy.defense}"); // Log after applying multiplier
+
+
+                enemy.attack = (int)(enemy.attack * GameManager.Instance.DifficultyMultiplier); // Apply multiplier to enemy attack
+
+                enemy.defense = (int)(enemy.defense * GameManager.Instance.DifficultyMultiplier); // Apply multiplier to enemy defense
+
+            }
+            hasAppliedDifficultyMultiplier = true; // Set the flag to true after applying
+        }
         StartTurn();
     }
 
