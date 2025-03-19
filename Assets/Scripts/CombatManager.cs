@@ -6,10 +6,14 @@ public class CombatManager : MonoBehaviour
 {
     public static CombatManager Instance { get; private set; }
 
+    private CharacterStatsUI characterStatsUI; // Moved inside the class
+
     private bool isActionComplete = false;
 
-    void Awake()
-    {
+    void Awake() 
+    {    
+        characterStatsUI = FindObjectOfType<CharacterStatsUI>();
+    
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -37,7 +41,6 @@ public class CombatManager : MonoBehaviour
     }
 
     public void ExecuteAction(Character character, Skill skill, Character target)
-
     {
         if (character == null)
         {
@@ -53,7 +56,6 @@ public class CombatManager : MonoBehaviour
     private IEnumerator PerformAction(Character character, Skill skill, Character target)
     {
         if (target == null)
-
         {
             Debug.LogWarning("No target specified for action");
             MarkActionComplete();
@@ -63,11 +65,13 @@ public class CombatManager : MonoBehaviour
         if (UnityEngine.Random.Range(0, 100) > skill.hitChance)
         {
             Debug.Log($"{character.name} missed {skill.name} on {target.name}!");
+            characterStatsUI.PlayAnimation(target, "die", 0.2f);
             MarkActionComplete();
             yield break;
         }
 
-        // Apply damage
+        characterStatsUI.PlayAnimation(character, "attack", 1.0f);
+
         int damage = skill.damage;
         int modifier = UnityEngine.Random.Range(-skill.damageModifier, skill.damageModifier + 1);
         damage += damage * modifier / 100;
@@ -82,6 +86,8 @@ public class CombatManager : MonoBehaviour
         if (target != null)
         {
             target.TakeDamage(damage);
+            characterStatsUI.PlayAnimation(target, "hurt", 1.0f);
+
             int remainingHP = target.health;
 
             Debug.Log($"{character.name} uses {skill.name} on {target.name}");
@@ -95,7 +101,9 @@ public class CombatManager : MonoBehaviour
         if (target != null && !target.IsAlive())
         {
             Debug.Log($"{target.name} has died!");
-            yield return new WaitForSeconds(1.5f);
+            characterStatsUI.PlayAnimation(target, "die", 1.0f);
+            yield return new WaitForSeconds(0.9f);
+            characterStatsUI.RemoveCharacter(target);
         }
         
         MarkActionComplete();

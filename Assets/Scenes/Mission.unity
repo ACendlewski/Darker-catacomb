@@ -436,7 +436,7 @@ GameObject:
   - component: {fileID: 159101249}
   - component: {fileID: 159101250}
   m_Layer: 0
-  m_Name: Characters
+  m_Name: Debug_Characters
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -466,7 +466,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -9.38}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 6, y: 1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &159101250
 MonoBehaviour:
@@ -5041,7 +5041,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   characters: []
   enemies: []
-  GameManager: {fileID: 1758590884}
 --- !u!4 &1318621408
 Transform:
   m_ObjectHideFlags: 0
@@ -5294,7 +5293,7 @@ GameObject:
   - component: {fileID: 1416390179}
   - component: {fileID: 1416390178}
   m_Layer: 0
-  m_Name: Enemies
+  m_Name: Debug_Enemies
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5347,7 +5346,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -5.0481925, y: -12.39}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 6, y: 1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1480622290
 GameObject:
