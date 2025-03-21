@@ -120,14 +120,7 @@ public class CharacterSelectionUI : MonoBehaviour
             Debug.Log(character.name + " has been selected!");
 
             UpdateSelectedCharacterButtons();
-
-            if (CharacterManager.Instance.selectedCharacters.Count == maxSelection)
-            {
-                startBattleButton.interactable = true;
-            }
-
-            // Zaktualizuj podgląd z ostatnią wybraną postacią
-            UpdateCharacterPreview(character);
+            RebuildCharacterPreviews();
         }
         else
         {
@@ -136,31 +129,65 @@ public class CharacterSelectionUI : MonoBehaviour
         DisplaySelectedCharactersInConsole();
     }
 
-    void UpdateCharacterPreview(Character character)
+
+    void RebuildCharacterPreviews()
     {
-        string prefabName = character.name.Replace("(Enemy) ", "").Trim();
-        GameObject characterPrefab = Resources.Load<GameObject>("Prefabs/" + prefabName);
-
-        if (characterPrefab == null)
+        // Usuwamy wszystkie istniejące podglądy
+        foreach (Transform child in characterContainer)
         {
-            Debug.LogError("Character prefab not found: " + prefabName);
-            return;
+            Destroy(child.gameObject);
         }
+        activeCharacterPreviews.Clear();
 
-        // Obliczenie pozycji na podstawie liczby wybranych postaci
-        int characterCount = activeCharacterPreviews.Count;
-        Vector3 spawnPosition = characterContainer.position + characterSpacing * characterCount;
+        // Odtwarzamy podglądy na podstawie listy wybranych postaci
+        int count = CharacterManager.Instance.selectedCharacters.Count;
+        for (int i = 0; i < count; i++)
+        {
+            Character character = CharacterManager.Instance.selectedCharacters[i];
+            string prefabName = character.name.Replace("(Enemy) ", "").Trim();
+            GameObject characterPrefab = Resources.Load<GameObject>("Prefabs/" + prefabName);
+            if (characterPrefab == null)
+            {
+                Debug.LogError("Character prefab not found: " + prefabName);
+                continue;
+            }
 
-        GameObject characterObject = Instantiate(characterPrefab, characterContainer);
-        characterObject.name = character.name;
-        characterObject.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
-        characterObject.transform.position = spawnPosition;
+            Vector3 spawnPosition = characterContainer.position + characterSpacing * i;
+            GameObject preview = Instantiate(characterPrefab, characterContainer);
+            preview.name = character.name;
+            preview.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
+            preview.transform.position = spawnPosition;
 
-        // Dodanie nowej instancji do listy
-        activeCharacterPreviews.Add(new KeyValuePair<Character, GameObject>(character, characterObject));
-        CharacterManager.Instance.characterCounts[character]++;
-        // Removed recursive call to UpdateCharacterPreview
+            activeCharacterPreviews.Add(new KeyValuePair<Character, GameObject>(character, preview));
+        }
     }
+
+
+    // void UpdateCharacterPreview(Character character)
+    // {
+    //     string prefabName = character.name.Replace("(Enemy) ", "").Trim();
+    //     GameObject characterPrefab = Resources.Load<GameObject>("Prefabs/" + prefabName);
+
+    //     if (characterPrefab == null)
+    //     {
+    //         Debug.LogError("Character prefab not found: " + prefabName);
+    //         return;
+    //     }
+
+    //     // Obliczenie pozycji na podstawie liczby wybranych postaci
+    //     int characterCount = activeCharacterPreviews.Count;
+    //     Vector3 spawnPosition = characterContainer.position + characterSpacing * characterCount;
+
+    //     GameObject characterObject = Instantiate(characterPrefab, characterContainer);
+    //     characterObject.name = character.name;
+    //     characterObject.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
+    //     characterObject.transform.position = spawnPosition;
+
+    //     // Dodanie nowej instancji do listy
+    //     activeCharacterPreviews.Add(new KeyValuePair<Character, GameObject>(character, characterObject));
+    //     CharacterManager.Instance.characterCounts[character]++;
+    //     // Removed recursive call to UpdateCharacterPreview
+    // }
 
     void UpdateSelectedCharacterButtons()
     {
@@ -185,63 +212,82 @@ public class CharacterSelectionUI : MonoBehaviour
                 button.onClick.AddListener(() => RemoveCharacter(selectedCharacter));
             }
         }
+        UpdateStartButton();
+    }
+
+    void UpdateStartButton()
+    {
+        int selectedCount = CharacterManager.Instance.selectedCharacters.Count;
+        startBattleButton.interactable = selectedCount == maxSelection;
+
+        TextMeshProUGUI buttonText = startBattleButton.GetComponentInChildren<TextMeshProUGUI>();
+        if (buttonText != null)
+        {
+            buttonText.text = (selectedCount == maxSelection) ? "GO" : $"{selectedCount}/{maxSelection}";
+        }
     }
 
     public void RemoveCharacter(Character character)
     {
-
+        if (CharacterManager.Instance != null && CharacterManager.Instance.selectedCharacters.Contains(character))
         {
-            if (CharacterManager.Instance != null && CharacterManager.Instance.selectedCharacters.Contains(character))
+            CharacterManager.Instance.selectedCharacters.Remove(character);
+            Debug.Log(character.name + " has been removed!");
+
+            UpdateSelectedCharacterButtons();
+            RebuildCharacterPreviews();
+
+            // Removing character previews from the scene
+
+            for (int i = activeCharacterPreviews.Count - 1; i >= 0; i--)
             {
-                CharacterManager.Instance.selectedCharacters.Remove(character);
-                Debug.Log(character.name + " has been removed!");
-
-                UpdateSelectedCharacterButtons();
-
-                if (CharacterManager.Instance.selectedCharacters.Count < maxSelection)
+                if (activeCharacterPreviews[i].Key == character)
                 {
-                    startBattleButton.interactable = false;
-                }
+                    GameObject objToDestroy = activeCharacterPreviews[i].Value;
 
-                // Removing character previews from the scene
+                    // Check if the object exists in the scene before destroying
 
-                for (int i = activeCharacterPreviews.Count - 1; i >= 0; i--)
-                {
-                    if (activeCharacterPreviews[i].Key == character)
+                    if (objToDestroy != null)
                     {
-                        GameObject objToDestroy = activeCharacterPreviews[i].Value;
-
-                        // Check if the object exists in the scene before destroying
-
-                        if (objToDestroy != null)
-                        {
-                            Debug.Log("Destroying character prefab: " + objToDestroy.name);
-                            Destroy(objToDestroy);
-                        }
-
-                        // Remove the entry from the list
-
-                        activeCharacterPreviews.RemoveAt(i);
+                        Debug.Log("Destroying character prefab: " + objToDestroy.name);
+                        Destroy(objToDestroy);
                     }
-                }
 
-                // Update positions of remaining character previews
+                    // Remove the entry from the list
 
-                for (int i = 0; i < activeCharacterPreviews.Count; i++)
-                {
-                    if (activeCharacterPreviews[i].Value != null)
-                    {
-                        activeCharacterPreviews[i].Value.transform.position =
-                            characterContainer.position + characterSpacing * i;
-                    }
+                    activeCharacterPreviews.RemoveAt(i);
+                    break;
                 }
             }
-            else
+
+            if (CharacterManager.Instance.characterCounts.ContainsKey(character))
             {
-                Debug.LogWarning($"Attempted to remove character {character?.name} that wasn't in selected characters list");
+                CharacterManager.Instance.characterCounts[character]--;
+
+                if (CharacterManager.Instance.characterCounts[character] <= 0)
+                {
+                    CharacterManager.Instance.characterCounts.Remove(character);
+                }
+            }
+            RepositionCharacterPreviews();
+        }
+        else
+        {
+            Debug.LogWarning($"Attempted to remove character {character?.name} that wasn't in selected characters list");
+        }
+    }
+
+    void RepositionCharacterPreviews()
+    {
+        for (int i = 0; i < activeCharacterPreviews.Count; i++)
+        {
+            if (activeCharacterPreviews[i].Value != null)
+            {
+                activeCharacterPreviews[i].Value.transform.position = characterContainer.position + characterSpacing * i;
             }
         }
     }
+
     public void ShowCharacterStats(Character character)
     {
         if (character == null)
@@ -249,25 +295,25 @@ public class CharacterSelectionUI : MonoBehaviour
             Debug.LogError("Character is null!");
             return;
         }
-            characterStatsPanel.SetActive(true);
-            characterNameText.text = "Name: " + character.name;
-            healthText.text = "Health: " + character.health;
-            attackText.text = "Attack: " + character.attack;
-            defenseText.text = "Defense: " + character.defense;
-            speedText.text = "Speed: " + character.speed;
+        characterStatsPanel.SetActive(true);
+        characterNameText.text = "Name: " + character.name;
+        healthText.text = "Health: " + character.health;
+        attackText.text = "Attack: " + character.attack;
+        defenseText.text = "Defense: " + character.defense;
+        speedText.text = "Speed: " + character.speed;
 
-            if (character.skills != null && character.skills.Count > 0)
+        if (character.skills != null && character.skills.Count > 0)
+        {
+            skillsText.text = "Skills:\n";
+            foreach (Skill skill in character.skills)
             {
-                skillsText.text = "Skills:\n";
-                foreach (Skill skill in character.skills)
-                {
-                    skillsText.text += $"- {skill.name} (Dmg: {skill.damage}, Hit: {skill.hitChance}%, Crit: {skill.critChance}%, Mod: ±{skill.damageModifier}%)\n";
-                }
+                skillsText.text += $"- {skill.name} (Dmg: {skill.damage}, Hit: {skill.hitChance}%, Crit: {skill.critChance}%, Mod: ±{skill.damageModifier}%)\n";
             }
-            else
-            {
-                skillsText.text = "Skills: None";
-            }
+        }
+        else
+        {
+            skillsText.text = "Skills: None";
+        }
     }
     public void HideCharacterStats()
     {
