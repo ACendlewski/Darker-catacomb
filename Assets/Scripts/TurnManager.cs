@@ -73,15 +73,22 @@ public class TurnManager : MonoBehaviour
 
     IEnumerator WaitForCharacterLoader()
     {
-        yield return new WaitUntil(() => characterLoader.characters != null && characterLoader.characters.Count > 0);
+        yield return new WaitUntil(() => characterLoader.characters != null &&
+                                     characterLoader.characters.Count > 0 &&
+                                     characterLoader.enemies != null &&
+                                     characterLoader.enemies.Count > 0);
 
         allCharacters = characterLoader.characters;
-        allEnemies = characterLoader.enemies.Cast<Character>().ToList();
+        allEnemies = new List<Character>(characterLoader.enemies);
         playerTeam = CharacterManager.Instance.selectedCharacters;
 
         SelectRandomEnemies();
         StartCoroutine(WaitForEnemies());
+        hasAppliedDifficultyMultiplier = false; // Initialize the flag
+
     }
+
+    private bool hasAppliedDifficultyMultiplier = false; // Flag to check if multiplier has been applied
 
     IEnumerator WaitForEnemies()
     {
@@ -94,6 +101,26 @@ public class TurnManager : MonoBehaviour
         characterStatsUI.SpawnAllCharacters(playerTeam, enemyTeam);
         UpdateTurnOrderText();
         UpdateTurnNumberText();
+
+        Debug.Log("Applying Difficulty Multiplier to enemies..."); // Debug log before applying
+        Debug.Log($"Difficulty Multiplier: {GameManager.Instance.DifficultyMultiplier}"); // Log the multiplier
+        if (!hasAppliedDifficultyMultiplier) // Check if multiplier has been applied
+
+        {
+            foreach (Character enemy in enemyTeam)
+            {
+                Debug.Log($"Before: {enemy.name} - Health: {enemy.health}, Attack: {enemy.attack}, Defense: {enemy.defense}"); // Log before applying multiplier
+                enemy.health = (int)(enemy.health * GameManager.Instance.DifficultyMultiplier); // Apply multiplier to enemy health
+                Debug.Log($"After: {enemy.name} - Health: {enemy.health}, Attack: {enemy.attack}, Defense: {enemy.defense}"); // Log after applying multiplier
+
+
+                enemy.attack = (int)(enemy.attack * GameManager.Instance.DifficultyMultiplier); // Apply multiplier to enemy attack
+
+                enemy.defense = (int)(enemy.defense * GameManager.Instance.DifficultyMultiplier); // Apply multiplier to enemy defense
+
+            }
+            hasAppliedDifficultyMultiplier = true; // Set the flag to true after applying
+        }
         StartTurn();
     }
 
@@ -112,42 +139,37 @@ public class TurnManager : MonoBehaviour
 
     void StartTurn()
     {
-        if (turnOrder.Count > 0 && currentTurnIndex < turnOrder.Count)
+        if (turnOrder.Count == 0) return;
+
+        if (currentTurnIndex >= turnOrder.Count)
         {
-            // Ensure previous turn is fully complete
-            if (isPlayerTurnActive)
-            {
-                Debug.LogWarning("Previous player turn still active - waiting...");
-                return;
-            }
-            Character currentCharacter = turnOrder[currentTurnIndex]; // Ensure currentCharacter is defined
-            if (!currentCharacter.IsAlive())
-            {
-                EndTurn();
-                return;
-            }
+            currentTurnIndex = 0;
+            turnNumber++;
+            UpdateTurnNumberText();
+        }
 
-            Debug.Log("It's " + currentCharacter.name + "'s turn!");
-            characterStatsUI.ShowCharacterStats(currentCharacter);
-            // Character turn started
+        Character currentCharacter = turnOrder[currentTurnIndex];
+        if (!currentCharacter.IsAlive())
+        {
+            EndTurn();
+            return;
+        }
 
+        Debug.Log($"It's {currentCharacter.name}'s turn!");
+        characterStatsUI.ShowCharacterStats(currentCharacter);
 
-            if (currentCharacter.isEnemy)
-            {
-                StartCoroutine(EnemyTurn(currentCharacter));
-            }
-            else
-            {
-                // Show action menu and wait for player input
-                isPlayerTurnActive = true;
-                ShowActionMenu(currentCharacter);
-                Debug.Log($"Player {currentCharacter.name}'s turn started - waiting for input");
-                return; // Don't proceed until player makes a choice
-            }
-
-
+        if (currentCharacter.isEnemy)
+        {
+            StartCoroutine(EnemyTurn(currentCharacter));
+        }
+        else
+        {
+            isPlayerTurnActive = true;
+            ShowActionMenu(currentCharacter);
+            Debug.Log($"Player {currentCharacter.name}'s turn started - waiting for input");
         }
     }
+
 
 
     IEnumerator EnemyTurn(Character enemy)
@@ -183,7 +205,6 @@ public class TurnManager : MonoBehaviour
 
     public void EndTurn()
     {
-        // Verify turn state before proceeding
         if (isPlayerTurnActive)
         {
             Debug.LogWarning("Cannot end turn - player turn still active");
@@ -192,37 +213,33 @@ public class TurnManager : MonoBehaviour
 
         if (IsGameOver())
         {
+            foreach (Character character in turnOrder)
+
+            {
+                characterStatsUI.PlayAnimation(turnOrder[currentTurnIndex], "victory", 1.0f);
+            }
             ShowGameOverScreen();
             return;
         }
 
-
-        // Move to next character in speed-based order
-        currentTurnIndex++;
-
-        // If we've reached the end of the turn order, start new round
-        if (currentTurnIndex >= turnOrder.Count)
+        do
         {
-            currentTurnIndex = 0;
-            turnNumber++;
-            UpdateTurnNumberText();
+            currentTurnIndex++;
+            if (currentTurnIndex >= turnOrder.Count)
+            {
+                currentTurnIndex = 0;
+                turnNumber++;
+                UpdateTurnNumberText();
+            }
         }
+        while (!turnOrder[currentTurnIndex].IsAlive()); // Pominięcie martwych postaci
 
         characterStatsUI.HideCharacterStats();
         HideActionMenu();
         UpdateTurnOrderText();
-
-        // Start next turn only if the next character is alive
-        if (turnOrder[currentTurnIndex].IsAlive())
-        {
-            StartTurn();
-        }
-        else
-        {
-            // Skip dead characters
-            EndTurn();
-        }
+        StartTurn();
     }
+
 
 
     private bool IsGameOver()
@@ -327,7 +344,7 @@ public class TurnManager : MonoBehaviour
         {
             if (enemy.IsAlive())
             {
-                var charUI = characterStatsUI.GetCharacterUI(enemy.name);
+                var charUI = characterStatsUI.GetCharacterUI(enemy);
                 if (charUI != null)
                 {
                     var highlight = charUI.GetComponent<HighlightEffect>();
@@ -359,7 +376,7 @@ public class TurnManager : MonoBehaviour
         {
             if (friendly.IsAlive())
             {
-                var charUI = characterStatsUI.GetCharacterUI(friendly.name);
+                var charUI = characterStatsUI.GetCharacterUI(friendly);
                 if (charUI != null)
                 {
                     var highlight = charUI.GetComponent<HighlightEffect>();
@@ -559,10 +576,13 @@ public class TurnManager : MonoBehaviour
         string turnOrderDisplay = "Turn Order:\n";
         foreach (Character character in turnOrder)
         {
-            turnOrderDisplay += $"SPD: {character.speed}";
-            turnOrderDisplay += character.isEnemy ? " (Enemy)" : "";
-            turnOrderDisplay += $" {character.name}";
-            turnOrderDisplay += $" HP: {character.health}\n";
+            if (character.health >= 0)
+            {
+                turnOrderDisplay += $"SPD: {character.speed}";
+                turnOrderDisplay += character.isEnemy ? " (Enemy)" : "";
+                turnOrderDisplay += $" {character.name}";
+                turnOrderDisplay += $" HP: {character.health}\n";
+            }
         }
         turnOrderText.text = turnOrderDisplay;
     }

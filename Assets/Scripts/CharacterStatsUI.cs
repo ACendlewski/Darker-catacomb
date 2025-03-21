@@ -22,7 +22,8 @@ public class CharacterStatsUI : MonoBehaviour
     public GameObject enemySelectionPanel;
     public GameObject enemyButtonPrefab;
 
-    private Dictionary<string, GameObject> spawnedCharacters = new Dictionary<string, GameObject>();
+    private Dictionary<Character, GameObject> spawnedCharacters = new Dictionary<Character, GameObject>();
+
 
     private void Start()
     {
@@ -42,7 +43,7 @@ public class CharacterStatsUI : MonoBehaviour
         defenseText.text = "DEF: " + character.defense;
         speedText.text = "SPD: " + character.speed;
 
-        if (!spawnedCharacters.ContainsKey(character.name))
+        if (!spawnedCharacters.ContainsKey(character))
         {
             SpawnCharacter(character);
         }
@@ -54,6 +55,12 @@ public class CharacterStatsUI : MonoBehaviour
         if (character == null)
         {
             Debug.LogError("Attempted to spawn null character");
+            return;
+        }
+
+        if (spawnedCharacters.ContainsKey(character))
+        {
+            Debug.LogWarning($"Character {character.name} is already spawned.");
             return;
         }
 
@@ -77,6 +84,12 @@ public class CharacterStatsUI : MonoBehaviour
         Quaternion rotation = character.isEnemy ? Quaternion.identity : Quaternion.Euler(0, 180, 0);
         GameObject characterObject = Instantiate(characterPrefab, spawnPoint.position, rotation);
         characterObject.name = character.name;
+
+        Animator animator = characterObject.GetComponent<Animator>();
+        if (animator == null)
+        {
+            Debug.LogError("Character prefab " + character.name + " is missing an Animator component");
+        }
 
         // Add health bar for both players and enemies
         if (healthBarPrefab != null)
@@ -172,8 +185,10 @@ public class CharacterStatsUI : MonoBehaviour
             });
         }
 
-        spawnedCharacters[character.name] = characterObject;
+        spawnedCharacters[character] = characterObject;
     }
+
+
 
     public void SpawnAllCharacters(List<Character> playerTeam, List<Character> enemyTeam)
     {
@@ -224,13 +239,54 @@ public class CharacterStatsUI : MonoBehaviour
             {
                 SpawnCharacter(enemyTeam[i]);
                 ShowCharacterStats(enemyTeam[i]);
-                TurnManager.Instance.AssignTargetSelectionTriggers(spawnedCharacters[enemyTeam[i].name], false);
+                TurnManager.Instance.AssignTargetSelectionTriggers(spawnedCharacters[enemyTeam[i]], false);
             }
             else
             {
                 Debug.LogWarning($"Not enough enemy positions for character {enemyTeam[i].name}");
             }
         }
+    }
+
+    public void PlayAnimation(Character character, string animationName, float duration)
+    {
+        if (spawnedCharacters.TryGetValue(character, out GameObject characterObject))
+        {
+            Animator animator = characterObject.GetComponent<Animator>();
+            if (animator != null)
+            {
+                StartCoroutine(ChangeAnimation(animator, animationName, duration));
+            }
+            else
+            {
+                Debug.LogError($"Character {character.name} does not have an Animator component");
+            }
+        }
+        else
+        {
+            Debug.LogError($"Character {character.name} not found in spawned characters");
+        }
+    }
+
+    public void RemoveCharacter(Character character)
+    {
+        if (spawnedCharacters.TryGetValue(character, out GameObject characterObject))
+        {
+            Destroy(characterObject);
+            spawnedCharacters.Remove(character);
+        }
+        else
+        {
+            Debug.LogError($"Character {character.name} not found in spawned characters");
+        }
+    }
+
+
+    private IEnumerator ChangeAnimation(Animator animator, string animationName, float duration)
+    {
+        animator.Play(animationName);
+        yield return new WaitForSeconds(duration);
+        animator.Play("idle");
     }
 
     private Transform GetSpawnPoint(Character character)
@@ -309,11 +365,11 @@ public class CharacterStatsUI : MonoBehaviour
         return spawnedCharacters.Values.ToList();
     }
 
-    public GameObject GetCharacterUI(string characterName)
+    public GameObject GetCharacterUI(Character character)
     {
-        if (spawnedCharacters.ContainsKey(characterName))
+        if (spawnedCharacters.ContainsKey(character))
         {
-            return spawnedCharacters[characterName];
+            return spawnedCharacters[character];
         }
         return null;
     }

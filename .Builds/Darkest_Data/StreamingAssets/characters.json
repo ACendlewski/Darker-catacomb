@@ -7,9 +7,27 @@
             "defense": 15,
             "speed": 10,
             "skills": [
-                { "name": "Shield Bash", "damage": 15, "hitChance": 90, "critChance": 10, "damageModifier": 10 },
-                { "name": "Healing Strike", "damage": 20, "hitChance": 85, "critChance": 15, "damageModifier": 5 },
-                { "name": "Courage Blow", "damage": 25, "hitChance": 80, "critChance": 20, "damageModifier": 15 }
+                {
+                    "name": "Shield Bash",
+                    "damage": 15,
+                    "hitChance": 90,
+                    "critChance": 10,
+                    "damageModifier": 10
+                },
+                {
+                    "name": "Healing Strike",
+                    "damage": 15,
+                    "hitChance": 85,
+                    "critChance": 15,
+                    "damageModifier": 5
+                },
+                {
+                    "name": "Courage Blow",
+                    "damage": 25,
+                    "hitChance": 80,
+                    "critChance": 20,
+                    "damageModifier": 15
+                }
             ]
         },
         {
@@ -19,9 +37,27 @@
             "defense": 5,
             "speed": 14,
             "skills": [
-                { "name": "Fireball", "damage": 50, "hitChance": 75, "critChance": 25, "damageModifier": 20 },
-                { "name": "Frostbolt", "damage": 40, "hitChance": 80, "critChance": 15, "damageModifier": 10 },
-                { "name": "Arcane Blast", "damage": 60, "hitChance": 70, "critChance": 30, "damageModifier": 25 }
+                {
+                    "name": "Fireball",
+                    "damage": 50,
+                    "hitChance": 75,
+                    "critChance": 25,
+                    "damageModifier": 20
+                },
+                {
+                    "name": "Frostbolt",
+                    "damage": 40,
+                    "hitChance": 80,
+                    "critChance": 15,
+                    "damageModifier": 10
+                },
+                {
+                    "name": "Arcane Blast",
+                    "damage": 60,
+                    "hitChance": 70,
+                    "critChance": 30,
+                    "damageModifier": 25
+                }
             ]
         },
         {
@@ -31,9 +67,27 @@
             "defense": 10,
             "speed": 20,
             "skills": [
-                { "name": "Backstab", "damage": 40, "hitChance": 85, "critChance": 30, "damageModifier": 15 },
-                { "name": "Poison Dagger", "damage": 20, "hitChance": 90, "critChance": 20, "damageModifier": 10 },
-                { "name": "Shadow Strike", "damage": 30, "hitChance": 80, "critChance": 35, "damageModifier": 20 }
+                {
+                    "name": "Backstab",
+                    "damage": 40,
+                    "hitChance": 85,
+                    "critChance": 30,
+                    "damageModifier": 15
+                },
+                {
+                    "name": "Poison Dagger",
+                    "damage": 20,
+                    "hitChance": 90,
+                    "critChance": 20,
+                    "damageModifier": 10
+                },
+                {
+                    "name": "Shadow Strike",
+                    "damage": 30,
+                    "hitChance": 80,
+                    "critChance": 35,
+                    "damageModifier": 20
+                }
             ]
         },
         {
@@ -43,9 +97,27 @@
             "defense": 20,
             "speed": 9,
             "skills": [
-                { "name": "Holy Smite", "damage": 30, "hitChance": 85, "critChance": 15, "damageModifier": 10 },
-                { "name": "Radiant Strike", "damage": 25, "hitChance": 90, "critChance": 10, "damageModifier": 5 },
-                { "name": "Sanctified Blow", "damage": 35, "hitChance": 80, "critChance": 20, "damageModifier": 15 }
+                {
+                    "name": "Holy Smite",
+                    "damage": 30,
+                    "hitChance": 85,
+                    "critChance": 15,
+                    "damageModifier": 10
+                },
+                {
+                    "name": "Radiant Strike",
+                    "damage": 25,
+                    "hitChance": 90,
+                    "critChance": 10,
+                    "damageModifier": 5
+                },
+                {
+                    "name": "Sanctified Blow",
+                    "damage": 35,
+                    "hitChance": 80,
+                    "critChance": 20,
+                    "damageModifier": 15
+                }
             ]
         },
         {
@@ -55,9 +127,27 @@
             "defense": 15,
             "speed": 17,
             "skills": [
-                { "name": "Chi Strike", "damage": 30, "hitChance": 85, "critChance": 15, "damageModifier": 10 },
-                { "name": "Meditative Blow", "damage": 25, "hitChance": 90, "critChance": 10, "damageModifier": 5 },
-                { "name": "Flurry", "damage": 40, "hitChance": 80, "critChance": 20, "damageModifier": 15 }
+                {
+                    "name": "Chi Strike",
+                    "damage": 30,
+                    "hitChance": 85,
+                    "critChance": 15,
+                    "damageModifier": 10
+                },
+                {
+                    "name": "Meditative Blow",
+                    "damage": 25,
+                    "hitChance": 90,
+                    "critChance": 10,
+                    "damageModifier": 5
+                },
+                {
+                    "name": "Flurry",
+                    "damage": 40,
+                    "hitChance": 80,
+                    "critChance": 20,
+                    "damageModifier": 15
+                }
             ]
         },
         {
@@ -67,9 +157,27 @@
             "defense": 12,
             "speed": 10,
             "skills": [
-                { "name": "Rage Strike", "damage": 40, "hitChance": 85, "critChance": 20, "damageModifier": 15 },
-                { "name": "Frenzied Blow", "damage": 50, "hitChance": 80, "critChance": 25, "damageModifier": 20 },
-                { "name": "Earth Shatter", "damage": 35, "hitChance": 75, "critChance": 30, "damageModifier": 25 }
+                {
+                    "name": "Rage Strike",
+                    "damage": 40,
+                    "hitChance": 85,
+                    "critChance": 20,
+                    "damageModifier": 15
+                },
+                {
+                    "name": "Frenzied Blow",
+                    "damage": 50,
+                    "hitChance": 80,
+                    "critChance": 25,
+                    "damageModifier": 20
+                },
+                {
+                    "name": "Earth Shatter",
+                    "damage": 35,
+                    "hitChance": 75,
+                    "critChance": 30,
+                    "damageModifier": 25
+                }
             ]
         }
     ]
