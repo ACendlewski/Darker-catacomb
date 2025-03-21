@@ -50,6 +50,9 @@ public class TurnManager : MonoBehaviour
     private Character selectedEnemy = null;
     private bool isPlayerTurnActive = false; // Track if player turn is in progress
 
+    [Header("End Game UI")]
+    public Button endGameButton;
+
 
     void Start()
     {
@@ -68,6 +71,7 @@ public class TurnManager : MonoBehaviour
             return;
         }
 
+        endGameButton.gameObject.SetActive(false);
         StartCoroutine(WaitForCharacterLoader());
     }
 
@@ -213,11 +217,6 @@ public class TurnManager : MonoBehaviour
 
         if (IsGameOver())
         {
-            foreach (Character character in turnOrder)
-
-            {
-                characterStatsUI.PlayAnimation(turnOrder[currentTurnIndex], "victory", 1.0f);
-            }
             ShowGameOverScreen();
             return;
         }
@@ -259,9 +258,18 @@ public class TurnManager : MonoBehaviour
         {
             if (character.IsAlive())
             {
-                // Character won
-
+                characterStatsUI.PlayAnimation(character, "victory", 999999.9f);
             }
+        }
+
+        if (endGameButton != null)
+        {
+            endGameButton.gameObject.SetActive(true);
+
+        }
+        else
+        {
+            Debug.LogWarning("End Game Button is not assigned!");
         }
 
         StopAllCoroutines();
@@ -574,13 +582,15 @@ public class TurnManager : MonoBehaviour
 
     {
         string turnOrderDisplay = "Turn Order:\n";
+        string currentTurnColor = "<color=green>"; // Define color for current turn
+
         foreach (Character character in turnOrder)
         {
             if (character.health >= 0)
             {
                 turnOrderDisplay += $"SPD: {character.speed}";
                 turnOrderDisplay += character.isEnemy ? " (Enemy)" : "";
-                turnOrderDisplay += $" {character.name}";
+                turnOrderDisplay += $"{(character == turnOrder[currentTurnIndex] ? currentTurnColor : "")} {character.name}{(character == turnOrder[currentTurnIndex] ? "</color>" : "")}";
                 turnOrderDisplay += $" HP: {character.health}\n";
             }
         }
