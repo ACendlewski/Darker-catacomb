@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -13,20 +12,38 @@ public class Change_Scene : MonoBehaviour
     {
         if (changeSceneButton != null)
         {
-            changeSceneButton.onClick.AddListener(() => ChangeScene(sceneToLoad));
+            changeSceneButton.onClick.AddListener(() => StartCoroutine(ChangeScene(sceneToLoad)));
         }
     }
 
-    public void ChangeScene(string sceneName)
+    IEnumerator ChangeScene(string sceneName)
     {
         if (sceneName.ToLower() == "quit")
         {
             Application.Quit();
             Debug.Log("Zamykanie gry...");
+            yield break;
         }
-        else
+
+        if (sceneName.ToLower() == "start")
         {
-            SceneManager.LoadScene(sceneName);
+            yield return StartCoroutine(DestroyAllDontDestroyOnLoadObjects());
         }
+        yield return new WaitForSeconds(0.1f);
+        SceneManager.LoadScene(sceneName);
+    }
+
+    IEnumerator DestroyAllDontDestroyOnLoadObjects()
+    {
+        GameObject[] allObjects = FindObjectsOfType<GameObject>();
+        foreach (GameObject obj in allObjects)
+        {
+            if (obj.scene.name == "DontDestroyOnLoad")
+            {
+                Destroy(obj);
+            }
+        }
+
+        yield return null;
     }
 }
